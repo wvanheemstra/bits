@@ -12,6 +12,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		SET @entityName = ENTITY_NAME;
 		SET @tableEntityName = CONCAT('tbl_', @entityName);
 		SET @tablePrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
+		SET @tableForeignKeyParentID = 'fk_ParentID';
 		SET @tableEntityKey = CONCAT(@entityName, 'Key');
 		SET @tableEntityValue = CONCAT(@entityName, 'Value');
 		SET @tableForeignKeyKindOfEntityID = CONCAT('fk_KindOf', @entityName, 'ID');
@@ -19,7 +20,9 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		SET @tableTimeStampCreated = 'ts_Created';
 		SET @tableTimeStampUpdated = 'ts_Updated';
 		SET @tableKindOfEntityName = CONCAT('tbl_kind_of_', @entityName);
-		SET @tablePrimaryKeyKindOfEntityID = CONCAT('pk_KindOf', @entityName, 'ID');	
+		SET @tablePrimaryKeyKindOfEntityID = CONCAT('pk_KindOf', @entityName, 'ID');
+		SET @tablePrimaryKeyLanguageID = CONCAT('pk_LanguageID');
+		SET @tableLanguage = 'tbl_language';
 		SET @viewEntityName = @entityName;
 		SET @viewKindOfEntityName = CONCAT('kind_of_', @entityName);		
 		-- Drop table		
@@ -37,6 +40,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		SET @query = CONCAT('
 			CREATE TABLE IF NOT EXISTS `' , @tableEntityName, '` (
 				`' , @tablePrimaryKeyEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+				`' , @tableForeignKeyParentID, '` INT(11) NOT NULL DEFAULT 0,				
 				`' , @tableEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
 				`' , @tableEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
 				`' , @tableForeignKeyKindOfEntityID, '` INT(11) NOT NULL DEFAULT 0,
@@ -44,7 +48,8 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 				`' , @tableTimeStampCreated, '` DATETIME DEFAULT NULL,
 				`' , @tableTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 				PRIMARY KEY (`' , @tablePrimaryKeyEntityID, '`),
-				FOREIGN KEY (`' , @tableForeignKeyKindOfEntityID, '`) REFERENCES `' , @tableKindOfEntityName, '` (`' , @tablePrimaryKeyKindOfEntityID, '`)
+				FOREIGN KEY (`' , @tableForeignKeyKindOfEntityID, '`) REFERENCES `' , @tableKindOfEntityName, '` (`' , @tablePrimaryKeyKindOfEntityID, '`),
+				FOREIGN KEY (`' , @tableForeignKeyLanguageID, '`) REFERENCES `' , @tableLanguage, '` (`' , @tablePrimaryKeyLanguageID, '`)				
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 		');
 		PREPARE stmt FROM @query;
@@ -73,7 +78,8 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		-- Create view
 		SET @query = CONCAT('
 			CREATE VIEW `' , @viewEntityName, '` AS
-				SELECT `' , @tablePrimaryKeyEntityID, '`,
+				SELECT `' , @tablePrimaryKeyEntityID, '`,		
+				`' , @tableForeignKeyParentID, '`,			
 				`' , @tableEntityKey, '`,
 				`' , @tableEntityValue, '`,
 				`' , @tableForeignKeyKindOfEntityID, '`,
