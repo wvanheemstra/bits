@@ -11,15 +11,15 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 	BEGIN
 		SET @entityName = ENTITY_NAME;
 		SET @tableEntityName = CONCAT('tbl_', @entityName);
-		SET @tablePrimaryKeyEntityID = CONCAT('kp_', @entityName, 'ID');
+		SET @tablePrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
 		SET @tableEntityKey = CONCAT(@entityName, 'Key');
 		SET @tableEntityValue = CONCAT(@entityName, 'Value');
-		SET @tableForeignKeyKindOfEntityID = CONCAT('kf_KindOf', @entityName, 'ID');
-		SET @tableForeignKeyLanguageID = CONCAT('kf_LanguageID');	
+		SET @tableForeignKeyKindOfEntityID = CONCAT('fk_KindOf', @entityName, 'ID');
+		SET @tableForeignKeyLanguageID = 'fk_LanguageID';
 		SET @tableTimeStampCreated = 'ts_Created';
 		SET @tableTimeStampUpdated = 'ts_Updated';
 		SET @tableKindOfEntityName = CONCAT('tbl_kind_of_', @entityName);
-		SET @tablePrimaryKeyKindOfEntityID = CONCAT('kp_KindOf', @entityName, 'ID');		
+		SET @tablePrimaryKeyKindOfEntityID = CONCAT('pk_KindOf', @entityName, 'ID');	
 		SET @viewEntityName = @entityName;
 		SET @viewKindOfEntityName = CONCAT('kind_of_', @entityName);		
 		-- Drop table		
@@ -39,7 +39,8 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 				`' , @tablePrimaryKeyEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 				`' , @tableEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
 				`' , @tableEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
-				`' , @tableForeignKeyKindOfEntityID, '` INT(11) NOT NULL DEFAULT 0,		
+				`' , @tableForeignKeyKindOfEntityID, '` INT(11) NOT NULL DEFAULT 0,
+				`' , @tableForeignKeyLanguageID, '` INT(11) NOT NULL DEFAULT 0,			
 				`' , @tableTimeStampCreated, '` DATETIME DEFAULT NULL,
 				`' , @tableTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 				PRIMARY KEY (`' , @tablePrimaryKeyEntityID, '`),
@@ -75,7 +76,8 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 				SELECT `' , @tablePrimaryKeyEntityID, '`,
 				`' , @tableEntityKey, '`,
 				`' , @tableEntityValue, '`,
-				`' , @tableForeignKeyKindOfEntityID, '`,			
+				`' , @tableForeignKeyKindOfEntityID, '`,
+				`' , @tableForeignKeyLanguageID, '`,				
 				`' , @tableTimeStampCreated, '`,
 				`' , @tableTimeStampUpdated, '`
 				FROM ' , @tableEntityName, ';
