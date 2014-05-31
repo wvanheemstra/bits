@@ -5,7 +5,7 @@
 -- Usage:
 -- CALL SP_CREATE_TABLES_AND_VIEWS(Foo);
 -- where Foo is the entity name 
-delimiter //
+DELIMITER //
 DROP PROCEDURE IF EXISTS `SP_CREATE_TABLES_AND_VIEWS`;
 CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
@@ -24,72 +24,127 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		SET @fieldPrimaryKeyLanguageID = CONCAT('pk_LanguageID');
 		SET @tableLanguage = 'tbl_language';
 		SET @viewEntityName = @entityName;
-		SET @viewKindOfEntityName = CONCAT('kind_of_', @entityName);		
-		-- Drop table		
-		SET @query = CONCAT('
-			DROP TABLE IF EXISTS `' , @tableEntityName, '`;
-		');
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;
+		SET @viewKindOfEntityName = CONCAT('kind_of_', @entityName);
+		SET @fieldKindOfEntityKey = CONCAT('KindOf', @entityName, 'Key');
+		SET @fieldKindOfEntityValue = CONCAT('KindOf', @entityName, 'Value');
 		-- Set names
 		SET NAMES utf8;
 		-- Set foreign key checks to off
-		SET FOREIGN_KEY_CHECKS = 0;		
-		-- Create table
-		SET @query = CONCAT('
-			CREATE TABLE IF NOT EXISTS `' , @tableEntityName, '` (
-				`' , @fieldPrimaryKeyEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-				`' , @fieldForeignKeyParentID, '` INT(11) NOT NULL REFERENCES `' , @tableEntityName, '` (`' , @fieldPrimaryKeyEntityID, '`),			
-				`' , @fieldEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
-				`' , @fieldEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
-				`' , @fieldForeignKeyKindOfEntityID, '` INT(11) NOT NULL DEFAULT 0,
-				`' , @fieldForeignKeyLanguageID, '` INT(11) NOT NULL DEFAULT 0,			
-				`' , @fieldTimeStampCreated, '` DATETIME DEFAULT NULL,
-				`' , @fieldTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-				PRIMARY KEY (`' , @fieldPrimaryKeyEntityID, '`),			
-				FOREIGN KEY (`' , @fieldForeignKeyKindOfEntityID, '`) REFERENCES `' , @tableKindOfEntityName, '` (`' , @fieldPrimaryKeyKindOfEntityID, '`),
-				FOREIGN KEY (`' , @fieldForeignKeyLanguageID, '`) REFERENCES `' , @tableLanguage, '` (`' , @fieldPrimaryKeyLanguageID, '`)	
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-		');
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;
--- START: NOT YET SUPPORTED		
---		-- Create trigger
---		SET @query = CONCAT('
---			CREATE TRIGGER `' , @entityName, '.' , @fieldTimeStampCreated, '` BEFORE INSERT ON `' , @tableEntityName, '` FOR EACH ROW BEGIN
---				SET NEW.' , @fieldTimeStampCreated, ' = CURRENT_TIMESTAMP();
---			END;
---		');
---		PREPARE stmt FROM @query;
---		EXECUTE stmt;
---		DEALLOCATE PREPARE stmt;
--- END: NOT YET SUPPORTED			
+		SET FOREIGN_KEY_CHECKS = 0;	
+		-- KIND OF ENTITY
+		START TRANSACTION;
+			SELECT CONCAT('Creating Kind of Entity table for: ', @entityName) AS Message;
+			-- Drop kind of entity table		
+			SET @query = CONCAT('
+				DROP TABLE IF EXISTS `' , @tableKindOfEntityName, '`;
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;	
+			-- Create kind of entity table
+			SET @query = CONCAT('
+				CREATE TABLE IF NOT EXISTS `' , @tableKindOfEntityName, '` (
+					`' , @fieldPrimaryKeyKindOfEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+					`' , @fieldForeignKeyParentID, '` INT(11) NOT NULL REFERENCES `' , @tableKindOfEntityName, '` (`' , @fieldPrimaryKeyKindOfEntityID, '`),
+					`' , @fieldKindOfEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
+					`' , @fieldKindOfEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
+					`' , @fieldForeignKeyLanguageID, '` INT(11) NOT NULL DEFAULT 0,
+					`' , @fieldTimeStampCreated, '` DATETIME DEFAULT NULL,
+					`' , @fieldTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					PRIMARY KEY (`' , @fieldPrimaryKeyKindOfEntityID, '`),
+					FOREIGN KEY (`' , @fieldForeignKeyLanguageID, '`) REFERENCES `' , @tableLanguage, '` (`' , @fieldPrimaryKeyLanguageID, '`)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+			-- Drop entity view		
+			SET @query = CONCAT('
+				DROP VIEW IF EXISTS `' , @viewKindOfEntityName, '`;
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;		
+			-- Create kind of entity view
+			SELECT CONCAT('Creating Kind of Entity view for: ', @entityName) AS Message;		
+			SET @query = CONCAT('
+				CREATE VIEW `' , @viewKindOfEntityName, '` AS
+					SELECT `' , @fieldPrimaryKeyKindOfEntityID, '`,		
+					`' , @fieldForeignKeyParentID, '`,
+					`' , @fieldKindOfEntityKey, '`,
+					`' , @fieldKindOfEntityValue, '`,
+					`' , @fieldForeignKeyLanguageID, '`,
+					`' , @fieldTimeStampCreated, '`,
+					`' , @fieldTimeStampUpdated, '`
+					FROM ' , @tableKindOfEntityName, ';
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+		COMMIT;
+		-- ENTITY
+		START TRANSACTION;
+			SELECT CONCAT('Creating Entity table for: ', @entityName) AS Message;
+			-- Drop entity table		
+			SET @query = CONCAT('
+				DROP TABLE IF EXISTS `' , @tableEntityName, '`;
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;	
+			-- Create entity table
+			SET @query = CONCAT('
+				CREATE TABLE IF NOT EXISTS `' , @tableEntityName, '` (
+					`' , @fieldPrimaryKeyEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+					`' , @fieldForeignKeyParentID, '` INT(11) NOT NULL REFERENCES `' , @tableEntityName, '` (`' , @fieldPrimaryKeyEntityID, '`),			
+					`' , @fieldEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
+					`' , @fieldEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
+					`' , @fieldForeignKeyKindOfEntityID, '` INT(11) NOT NULL DEFAULT 0,
+					`' , @fieldForeignKeyLanguageID, '` INT(11) NOT NULL DEFAULT 0,			
+					`' , @fieldTimeStampCreated, '` DATETIME DEFAULT NULL,
+					`' , @fieldTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					PRIMARY KEY (`' , @fieldPrimaryKeyEntityID, '`),
+					FOREIGN KEY (`' , @fieldForeignKeyLanguageID, '`) REFERENCES `' , @tableLanguage, '` (`' , @fieldPrimaryKeyLanguageID, '`)	
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+			-- Drop entity view		
+			SET @query = CONCAT('
+				DROP VIEW IF EXISTS `' , @viewEntityName, '`;
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;		
+			-- Create entity view
+			SELECT CONCAT('Creating Entity view for: ', @entityName) AS Message;
+			SET @query = CONCAT('
+				CREATE VIEW `' , @viewEntityName, '` AS
+					SELECT `' , @fieldPrimaryKeyEntityID, '`,		
+					`' , @fieldForeignKeyParentID, '`,
+					`' , @fieldEntityKey, '`,
+					`' , @fieldEntityValue, '`,
+					`' , @fieldForeignKeyKindOfEntityID, '`,
+					`' , @fieldForeignKeyLanguageID, '`,
+					`' , @fieldTimeStampCreated, '`,
+					`' , @fieldTimeStampUpdated, '`
+					FROM ' , @tableEntityName, ';
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;	
+			-- Alter entity table
+			SET @query = CONCAT('
+			ALTER TABLE `' , @tableEntityName, '`
+			ADD CONSTRAINT
+			FOREIGN KEY (`' , @fieldForeignKeyKindOfEntityID, '`) REFERENCES `' , @tableKindOfEntityName, '` (`' , @fieldPrimaryKeyKindOfEntityID, '`)
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+		COMMIT;		
 		-- Set foreign key checks to on
 		SET FOREIGN_KEY_CHECKS = 1;	
-		-- Drop view		
-		SET @query = CONCAT('
-			DROP VIEW IF EXISTS `' , @viewEntityName, '`;
-		');
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;		
-		-- Create view
-		SET @query = CONCAT('
-			CREATE VIEW `' , @viewEntityName, '` AS
-				SELECT `' , @fieldPrimaryKeyEntityID, '`,		
-				`' , @fieldForeignKeyParentID, '`,
-				`' , @fieldEntityKey, '`,
-				`' , @fieldEntityValue, '`,
-				`' , @fieldForeignKeyKindOfEntityID, '`,
-				`' , @fieldForeignKeyLanguageID, '`,
-				`' , @fieldTimeStampCreated, '`,
-				`' , @fieldTimeStampUpdated, '`
-				FROM ' , @tableEntityName, ';
-		');
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;
-	END;
-delimiter ;
+	END
+//
