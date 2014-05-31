@@ -11,12 +11,13 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 	BEGIN
 		SET @entityName = ENTITY_NAME;
 		SET @tableName = CONCAT('tbl_', @entityName);
-		SET @tablePrimaryKey = CONCAT('kp_', @entityName, 'ID');
+		SET @tablePrimaryKeyEntityID = CONCAT('kp_', @entityName, 'ID');
 		SET @tableEntityKey = CONCAT(@entityName, 'Key');
 		SET @tableEntityValue = CONCAT(@entityName, 'Value');
+		SET @tableForeignKeyKindOfEntityID = CONCAT('kf_KindOf', @entityName, 'ID');
 		SET @tableTimeStampCreated = 'ts_Created';
 		SET @tableTimeStampUpdated = 'ts_Updated';
-		SET @viewName = @entityName;		
+		SET @viewName = @entityName;
 		-- Drop table		
 		SET @query = CONCAT('
 			DROP TABLE IF EXISTS `' , @tableName, '`;
@@ -31,12 +32,13 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		-- Create table
 		SET @query = CONCAT('
 			CREATE TABLE IF NOT EXISTS `' , @tableName, '` (
-				`' , @tablePrimaryKey, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-				`' , @tableEntityKey, '`  varchar(255) COLLATE utf8_bin NOT NULL,
-				`' , @tableEntityValue, '`  varchar(255) COLLATE utf8_bin NOT NULL,
-				`' , @tableTimeStampCreated, '` datetime DEFAULT NULL,
-				`' , @tableTimeStampUpdated, '` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-				PRIMARY KEY (`' , @tablePrimaryKey, '`)
+				`' , @tablePrimaryKeyEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+				`' , @tableEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
+				`' , @tableEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
+				`' , @tableForeignKeyKindOfEntityID, '` INT(11) NOT NULL DEFAULT 0,		
+				`' , @tableTimeStampCreated, '` DATETIME DEFAULT NULL,
+				`' , @tableTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+				PRIMARY KEY (`' , @tablePrimaryKeyEntityID, '`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 		');
 		PREPARE stmt FROM @query;
@@ -65,9 +67,10 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		-- Create view
 		SET @query = CONCAT('
 			CREATE VIEW `' , @viewName, '` AS
-				SELECT `' , @tablePrimaryKey, '`,
+				SELECT `' , @tablePrimaryKeyEntityID, '`,
 				`' , @tableEntityKey, '`,
 				`' , @tableEntityValue, '`,
+				`' , @tableForeignKeyKindOfEntityID, '`,			
 				`' , @tableTimeStampCreated, '`,
 				`' , @tableTimeStampUpdated, '`
 				FROM ' , @tableName, ';
