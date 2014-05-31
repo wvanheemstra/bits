@@ -45,10 +45,10 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 			SET @query = CONCAT('
 				CREATE TABLE IF NOT EXISTS `' , @tableKindOfEntityName, '` (
 					`' , @fieldPrimaryKeyKindOfEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-					`' , @fieldForeignKeyParentID, '` INT(11) NOT NULL REFERENCES `' , @tableKindOfEntityName, '` (`' , @fieldPrimaryKeyKindOfEntityID, '`),
+					`' , @fieldForeignKeyParentID, '` INT(11) UNSIGNED NOT NULL REFERENCES `' , @tableKindOfEntityName, '` (`' , @fieldPrimaryKeyKindOfEntityID, '`),
 					`' , @fieldKindOfEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
 					`' , @fieldKindOfEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
-					`' , @fieldForeignKeyLanguageID, '` INT(11) NOT NULL DEFAULT 0,
+					`' , @fieldForeignKeyLanguageID, '` INT(11) UNSIGNED NOT NULL DEFAULT 0,
 					`' , @fieldTimeStampCreated, '` DATETIME DEFAULT NULL,
 					`' , @fieldTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 					PRIMARY KEY (`' , @fieldPrimaryKeyKindOfEntityID, '`),
@@ -96,14 +96,15 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 			SET @query = CONCAT('
 				CREATE TABLE IF NOT EXISTS `' , @tableEntityName, '` (
 					`' , @fieldPrimaryKeyEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-					`' , @fieldForeignKeyParentID, '` INT(11) NOT NULL REFERENCES `' , @tableEntityName, '` (`' , @fieldPrimaryKeyEntityID, '`),			
+					`' , @fieldForeignKeyParentID, '` INT(11) UNSIGNED NOT NULL REFERENCES `' , @tableEntityName, '` (`' , @fieldPrimaryKeyEntityID, '`),			
 					`' , @fieldEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
 					`' , @fieldEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
-					`' , @fieldForeignKeyKindOfEntityID, '` INT(11) NOT NULL DEFAULT 0,
-					`' , @fieldForeignKeyLanguageID, '` INT(11) NOT NULL DEFAULT 0,			
+					`' , @fieldForeignKeyKindOfEntityID, '` INT(11) UNSIGNED NOT NULL DEFAULT 0,
+					`' , @fieldForeignKeyLanguageID, '` INT(11) UNSIGNED NOT NULL DEFAULT 0,			
 					`' , @fieldTimeStampCreated, '` DATETIME DEFAULT NULL,
 					`' , @fieldTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 					PRIMARY KEY (`' , @fieldPrimaryKeyEntityID, '`),
+					FOREIGN KEY (`' , @fieldForeignKeyKindOfEntityID, '`) REFERENCES `' , @tableKindOfEntityName, '` (`' , @fieldPrimaryKeyKindOfEntityID, '`),
 					FOREIGN KEY (`' , @fieldForeignKeyLanguageID, '`) REFERENCES `' , @tableLanguage, '` (`' , @fieldPrimaryKeyLanguageID, '`)	
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 			');
@@ -130,15 +131,6 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 					`' , @fieldTimeStampCreated, '`,
 					`' , @fieldTimeStampUpdated, '`
 					FROM ' , @tableEntityName, ';
-			');
-			PREPARE stmt FROM @query;
-			EXECUTE stmt;
-			DEALLOCATE PREPARE stmt;	
-			-- Alter entity table
-			SET @query = CONCAT('
-			ALTER TABLE `' , @tableEntityName, '`
-			ADD CONSTRAINT
-			FOREIGN KEY (`' , @fieldForeignKeyKindOfEntityID, '`) REFERENCES `' , @tableKindOfEntityName, '` (`' , @fieldPrimaryKeyKindOfEntityID, '`)
 			');
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
