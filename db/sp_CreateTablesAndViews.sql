@@ -1,39 +1,73 @@
+-- Name: sp_CreateTablesAndViews
+-- Description: A stored procedure that creates tables and views
+-- Parameters:
+-- IN: ENTITY_NAME
+-- Usage:
+-- CALL SP_CREATE_TABLES_AND_VIEWS(Foo);
+-- where Foo is the entity name 
 delimiter //
+DROP PROCEDURE IF EXISTS `SP_CREATE_TABLES_AND_VIEWS`;
 CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
 		SET @entityName = ENTITY_NAME;
 		SET @tableName = CONCAT('tbl_', @entityName);
 		SET @tablePrimaryKey = CONCAT('kp_', @entityName, 'ID');
+		SET @tableTimeStampCreated = 'ts_Created';
+		SET @tableTimeStampUpdated = 'ts_Updated';
+		SET @viewName = @entityName;		
 		-- Drop table		
 		SET @query = CONCAT('
-			DROP TABLE IF EXISTS `' , @tableName, '`
-		');
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;		
-		-- Create table
-		SET @query = CONCAT('
-			CREATE TABLE IF NOT EXISTS `' , @tableName, '` (
-				`' , @tablePrimaryKey, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-				PRIMARY KEY (`' , @tablePrimaryKey, '`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8
+			DROP TABLE IF EXISTS `' , @tableName, '`;
 		');
 		PREPARE stmt FROM @query;
 		EXECUTE stmt;
 		DEALLOCATE PREPARE stmt;
-		-- and you're done. Table is created.
-		-- process it here if you like (INSERT etc)
-	END //
+		-- Set names
+		SET NAMES utf8;
+		-- Set foreign key checks to off
+		SET FOREIGN_KEY_CHECKS = 0;		
+		-- Create table
+		SET @query = CONCAT('
+			CREATE TABLE IF NOT EXISTS `' , @tableName, '` (
+				`' , @tablePrimaryKey, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+				`' , @tableTimeStampCreated, '` datetime DEFAULT NULL,
+				`' , @tableTimeStampUpdated, '` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+				PRIMARY KEY (`' , @tablePrimaryKey, '`)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+		');
+		PREPARE stmt FROM @query;
+		EXECUTE stmt;
+		DEALLOCATE PREPARE stmt;
+-- START: NOT YET SUPPORTED		
+--		-- Create trigger
+--		SET @query = CONCAT('
+--			CREATE TRIGGER `' , @entityName, '.' , @tableTimeStampCreated, '` BEFORE INSERT ON `' , @tableName, '` FOR EACH ROW BEGIN
+--				SET NEW.' , @tableTimeStampCreated, ' = CURRENT_TIMESTAMP();
+--			END;
+--		');
+--		PREPARE stmt FROM @query;
+--		EXECUTE stmt;
+--		DEALLOCATE PREPARE stmt;
+-- END: NOT YET SUPPORTED			
+		-- Set foreign key checks to on
+		SET FOREIGN_KEY_CHECKS = 1;	
+		-- Drop view		
+		SET @query = CONCAT('
+			DROP VIEW IF EXISTS `' , @viewName, '`;
+		');
+		PREPARE stmt FROM @query;
+		EXECUTE stmt;
+		DEALLOCATE PREPARE stmt;		
+		-- Create view
+		SET @query = CONCAT('
+			CREATE VIEW `' , @viewName, '` AS
+				SELECT `' , @tablePrimaryKey, '`,
+				`' , @tableTimeStampCreated, '`,
+				`' , @tableTimeStampUpdated, '`
+				FROM ' , @tableName, ';
+		');
+		PREPARE stmt FROM @query;
+		EXECUTE stmt;
+		DEALLOCATE PREPARE stmt;
+	END;
 delimiter ;
-
--- Call this stored procedure like so, where Foo is the entity name:
--- CALL SP_CREATE_TABLES_AND_VIEWS(Foo);
-
-
-
-      CREATE TABLE ENTITY_NAME 
-      (
-        TestID int(11) default NULL,
-        TestName varchar(100) default NULL
-      ) 
-      ENGINE=InnoDB DEFAULT CHARSET=utf8;
