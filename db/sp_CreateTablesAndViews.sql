@@ -12,6 +12,8 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		SET @entityName = ENTITY_NAME;
 		SET @tableName = CONCAT('tbl_', @entityName);
 		SET @tablePrimaryKey = CONCAT('kp_', @entityName, 'ID');
+		SET @tableEntityKey = CONCAT(@entityName, 'Key');
+		SET @tableEntityValue = CONCAT(@entityName, 'Value');
 		SET @tableTimeStampCreated = 'ts_Created';
 		SET @tableTimeStampUpdated = 'ts_Updated';
 		SET @viewName = @entityName;		
@@ -30,6 +32,8 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		SET @query = CONCAT('
 			CREATE TABLE IF NOT EXISTS `' , @tableName, '` (
 				`' , @tablePrimaryKey, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+				`' , @tableEntityKey, '`  varchar(255) COLLATE utf8_bin NOT NULL,
+				`' , @tableEntityValue, '`  varchar(255) COLLATE utf8_bin NOT NULL,
 				`' , @tableTimeStampCreated, '` datetime DEFAULT NULL,
 				`' , @tableTimeStampUpdated, '` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 				PRIMARY KEY (`' , @tablePrimaryKey, '`)
@@ -62,6 +66,8 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		SET @query = CONCAT('
 			CREATE VIEW `' , @viewName, '` AS
 				SELECT `' , @tablePrimaryKey, '`,
+				`' , @tableEntityKey, '`,
+				`' , @tableEntityValue, '`,
 				`' , @tableTimeStampCreated, '`,
 				`' , @tableTimeStampUpdated, '`
 				FROM ' , @tableName, ';
