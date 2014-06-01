@@ -1,7 +1,6 @@
 -- Name: CreateDatabase
 -- Description: An sql statement that creates a database 'bits' 
 SET @DATABASE_NAME ="bits";
-SET @ENTITY_NAME = "Entity";
 DROP DATABASE IF EXISTS `bits`;
 CREATE DATABASE IF NOT EXISTS `bits` 
 CHARACTER SET 'utf8'
@@ -151,12 +150,14 @@ CREATE PROCEDURE `bits`.`SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(2
 	END $$
 DELIMITER ;
 -- Name: sp_Main
--- Description: A stored procedure that contains the main procedures, run this first after having created the empty database and required stored procedures
+-- Description: A stored procedure that contains the main procedures, 
+-- run this first after having created the empty database and required stored procedures
 -- Parameters:
--- IN: DATABASE_NAME
+-- IN: DATABASE_NAME, ENTITY_NAME
 -- Usage:
--- CALL SP_MAIN(Foo);
--- where Foo is the database name 
+-- CALL SP_MAIN(Foo, Bar);
+-- where Foo is the database name
+-- and Bar is the entity name 
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `bits`.`SP_MAIN`;
 CREATE PROCEDURE `bits`.`SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
@@ -165,9 +166,28 @@ CREATE PROCEDURE `bits`.`SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET
 		CALL `bits`.SP_CREATE_TABLES_AND_VIEWS(@ENTITY_NAME);
 		-- Insert all entities
 		
+/* 		SET @myArrayOfValue = '2,5,2,23,6,';
+		SET @myArrayOfValueCOmplex = '3,17';
+
+		INSERT INTO `bits`.`tbl_kind_of_entity` VALUES(1,1,'Kind of Entity','Simple', 0, '', '');
+		INSERT INTO `bits`.`tbl_kind_of_entity` VALUES(2,2,'Kind of Entity','Complex', 0, '', '');
+		
+		WHILE (LOCATE(',', @myArrayOfValue) > 0)
+		DO
+			SET @value = ELT(1, @myArrayOfValue);
+			SET @value = SUBSTRING(@myArrayOfValue, LOCATE(',',@myArrayOfValue) + 1);
+			SET @count = 1;
+			INSERT INTO `bits`.`tbl_entity` VALUES(@count,@count,'Entity',@value, 1, 0, '', '');
+			SET @count = @count + 1;
+		END WHILE; */
+		
+		
 		-- TO DO
 	
 	END $$
 DELIMITER ;	
--- Call stored procedure main, proving it with the database name
+-- Call stored procedure main, proving it with the database name and entity name
+SET @ENTITY_NAME = 'Language';
+CALL `bits`.SP_MAIN(@DATABASE_NAME, @ENTITY_NAME);
+SET @ENTITY_NAME = 'Entity';
 CALL `bits`.SP_MAIN(@DATABASE_NAME, @ENTITY_NAME);
