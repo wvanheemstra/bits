@@ -189,5 +189,41 @@ DELIMITER ;
 -- Call stored procedure main, proving it with the database name and entity name
 SET @ENTITY_NAME = 'Language';
 CALL `bits`.SP_MAIN(@DATABASE_NAME, @ENTITY_NAME);
+	-- Set names
+	SET NAMES utf8;
+	-- Set foreign key checks to off
+	SET FOREIGN_KEY_CHECKS = 0;	
+	SET @entityName = @ENTITY_NAME;
+	SET @databaseName = @DATABASE_NAME;
+	SET @tableEntityName = CONCAT('tbl_', @entityName);
+	SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
+	SET @valueFieldPrimaryKeyEntityID = 1;
+	SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;	
+	SET @valueFieldEntityKey = 'Language';
+	SET @valueFieldEntityValue = 'English';
+	SET @valueForeignKeyKindOfEntityID = 0;
+	SET @valueForeignKeyLanguageID = 1;
+	SET @valueTimeStampCreated = '0000-00-00 00:00:00';
+	SET @valueTimeStampUpdated = '0000-00-00 00:00:00';
+	START TRANSACTION;
+		SET @query = CONCAT('
+			INSERT INTO `',@databaseName,'`.`',@tableEntityName,'` 
+			VALUES(
+			 ',@valueFieldPrimaryKeyEntityID,',
+			 ',@valueFieldForeignKeyParentID,',
+			"',@valueFieldEntityKey,'",
+			"',@valueFieldEntityValue,'",
+			 ',@valueForeignKeyKindOfEntityID,',
+			 ',@valueForeignKeyLanguageID,',
+			"',@valueTimeStampCreated,'",
+			"',@valueTimeStampUpdated,'");
+		');
+		SELECT @query AS Message;
+		PREPARE stmt FROM @query;
+		EXECUTE stmt;
+		DEALLOCATE PREPARE stmt;
+	COMMIT;	
+	-- Set foreign key checks to on
+	SET FOREIGN_KEY_CHECKS = 1;
 SET @ENTITY_NAME = 'Entity';
 CALL `bits`.SP_MAIN(@DATABASE_NAME, @ENTITY_NAME);
