@@ -1,8 +1,11 @@
 -- Name: CreateDatabase
--- Description: An sql statement that creates a database 'bits' 
+-- Description: An sql statement that creates a database 'bits'
+-- ================ CUSTOM CONFIGURATIONS ======================================
 SET @databaseName ='bits'; -- 'bits' is mandatory
-SET @databaseEntities = '"Entity","Language","Individual","Name"'; -- Entity & Language are mandatory
+SET @databaseSimpleEntities = '"Entity","Language","Individual","Name"'; -- Entity & Language are mandatory
+SET @databaseComplexEntities = '"Membership","Whereabouts"'; -- Entities with fields other than the default fields
 SET @databaseLanguage = 'English'; -- 'English' is mandatory
+-- ================ DO NOT CHANGE ANYTHING BELOW THIS LINE =====================
 DROP DATABASE IF EXISTS `bits`;
 CREATE DATABASE IF NOT EXISTS `bits` CHARACTER SET 'utf8' COLLATE 'utf8_bin';
 -- Name: sp_CreateTablesAndViews
@@ -278,7 +281,7 @@ SET @entityName = 'Entity';
 CALL `bits`.SP_MAIN(@databaseName, @entityName);
 -- Set values for entity table, then call stored procedure insert array of values, providing it with the key and array of values
 SET @valueFieldEntityKey = 'Entity';
-SET @valueFieldEntityValueArray = @databaseEntities;
+SET @valueFieldEntityValueArray = @databaseSimpleEntities;
 SET @valueFieldEntityValueArraySeparator = ',';
 CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@databaseName, @entityName, @valueFieldEntityKey, @valueFieldEntityValueArray, @valueFieldEntityValueArraySeparator);
 
