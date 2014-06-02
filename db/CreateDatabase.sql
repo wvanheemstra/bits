@@ -284,6 +284,42 @@ SET @valueFieldEntityKey = 'Entity';
 SET @valueFieldEntityValueArray = @databaseSimpleEntities;
 SET @valueFieldEntityValueArraySeparator = ',';
 CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@databaseName, @entityName, @valueFieldEntityKey, @valueFieldEntityValueArray, @valueFieldEntityValueArraySeparator);
-
--- NEXT: we can now create tables based on the entity names stored in tbl_entity.EntityValue
--- TO DO:
+-- Create a stored procedure that creates tables based on the entity names stored in tbl_entity.EntityValue
+DELIMITER $$
+CREATE PROCEDURE `bits`.`SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `TABLE_NAME` varchar(255) CHARACTER SET 'utf8', IN `FIELD_KEY_NAME` varchar(255) CHARACTER SET 'utf8', IN `KEY_VALUE` varchar(255) CHARACTER SET 'utf8', IN `FIELD_VALUE_NAME` varchar(255) CHARACTER SET 'utf8')
+	BEGIN
+		DECLARE findFinished INTEGER DEFAULT 0;
+		DECLARE fieldValue varchar(255) DEFAULT "";
+		-- Declare cursor for field value
+		DECLARE fieldValueCursor CURSOR FOR
+			SELECT `EntityValue` FROM `bits`.`tbl_entity` WHERE `EntityKey` = 'Entity';	
+		-- Declare NOT FOUND handler
+		DECLARE CONTINUE HANDLER 
+			FOR NOT FOUND SET findFinished = 1;	
+		OPEN fieldValueCursor;
+		getFieldValue: LOOP
+			FETCH fieldValueCursor INTO fieldValue;
+			IF findFinished = 1 THEN 
+				LEAVE getFieldValue;
+			END IF;
+			SELECT CONCAT('Found: ', fieldValue) AS Message_FieldValue;
+			SET @entityName = fieldValue;
+			CASE  
+				WHEN @entityName = 'Entity' THEN     
+					SELECT CONCAT('Skipping: ', @entityName) AS Message;
+				WHEN @entityName = 'Language' THEN
+					SELECT CONCAT('Skipping: ', @entityName) AS Message; 
+				ELSE CALL `bits`.SP_CREATE_TABLES_AND_VIEWS(@entityName);
+			END CASE;
+		END LOOP getFieldValue;
+		CLOSE fieldValueCursor;
+	END $$
+DELIMITER ;
+-- Call stored procedure loop field call create tables and views, 
+-- proving it with the database name, table name, 
+SET @tableName = 'tbl_entity';
+SET @fieldKeyName = 'EntityKey';
+SET @keyValue = 'Entity';
+SET @fieldValueName = 'EntityValue';
+CALL `bits`.SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS(@databaseName, @tableName, @fieldKeyName, @keyValue, @fieldValueName);
+-- By now all simple entity tables and views should have been created (excluding link tables)
