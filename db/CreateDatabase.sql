@@ -203,18 +203,18 @@ CALL `bits`.SP_MAIN(@databaseName, @entityName);
 	SET @valueTimeStampCreated = CAST('0000-00-00 00:00:00' AS DATETIME);
 	SET @valueTimeStampUpdated = CAST('0000-00-00 00:00:00' AS DATETIME);
 	START TRANSACTION;
-		SET @query = CONCAT('
-			INSERT INTO `',@databaseName,'`.`',@tableEntityName,'` 
+		SET @query = CONCAT("
+			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
 			VALUES(
-			 ',@valueFieldPrimaryKeyEntityID,',
-			 ',@valueFieldForeignKeyParentID,',
-			"',@valueFieldEntityKey,'",
-			"',@valueFieldEntityValue,'",
-			 ',@valueForeignKeyKindOfEntityID,',
-			 ',@valueForeignKeyLanguageID,',
-			"',@valueTimeStampCreated,'",
-			"',@valueTimeStampUpdated,'");
-		');
+			 ",@valueFieldPrimaryKeyEntityID,",
+			 ",@valueFieldForeignKeyParentID,",
+			'",@valueFieldEntityKey,"',
+			'",@valueFieldEntityValue,"',
+			 ",@valueForeignKeyKindOfEntityID,",
+			 ",@valueForeignKeyLanguageID,",
+			'",@valueTimeStampCreated,"',
+			'",@valueTimeStampUpdated,"');
+		");
 		SELECT @query AS Message;
 		PREPARE stmt FROM @query;
 		EXECUTE stmt;
@@ -243,29 +243,10 @@ CREATE PROCEDURE `bits`.`SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(
 		SET @valueTimeStampUpdated = CAST('0000-00-00 00:00:00' AS DATETIME);
 		SET NAMES utf8;
 		SET FOREIGN_KEY_CHECKS = 0;	
-		
-		-- SET @iterator = 1;
-		-- WHILE @iterator <=2 DO
-		
 		WHILE (LOCATE(@separator, @valueFieldEntityValueArray) > 0) DO
-		
-		    -- SET @valueFieldEntityValue = SUBSTRING_INDEX(@valueFieldEntityValueArray, @separator, 1);
-			
-			SET @valueFieldEntityValue = ELT(1, @valueFieldEntityValueArray);
-			
-			-- start: for test
-			SELECT LOCATE(@separator, @valueFieldEntityValueArray) AS Message_Locate1;
-			SELECT @valueFieldEntityValueArray AS Message_valueFieldEntityValueArray1;			
-			SELECT @valueFieldEntityValue AS Message_valueFieldEntityValue1;	
-			-- end: for test
-			
+			SET @valueFieldEntityValue = SUBSTRING_INDEX(@valueFieldEntityValueArray, @separator, 1);
+			SET @valueFieldEntityValue = REPLACE(@valueFieldEntityValue,'"',''); -- removes double quotes
 			SET @valueFieldEntityValueArray = SUBSTRING(@valueFieldEntityValueArray, LOCATE(@separator,@valueFieldEntityValueArray) + 1);
-			
-			-- start: for test
-			SELECT @valueFieldEntityValueArray AS Message_valueFieldEntityValueArray2;
-			SELECT @valueFieldEntityValue AS Message_valueFieldEntityValue2;	
-			-- end: for test
-			
 			START TRANSACTION;
 				SET @query = CONCAT("
 					INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
@@ -286,15 +267,6 @@ CREATE PROCEDURE `bits`.`SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(
 			COMMIT;
 			SET @valueFieldPrimaryKeyEntityID = @valueFieldPrimaryKeyEntityID + 1;
 			SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;
-			
-			-- TEMP to stop while loop:
-			-- SET @valueFieldEntityValueArray = '';
-			-- SET @iterator = @iterator + 1;
-			
-			-- start: for test
-			SELECT LOCATE(@separator, @valueFieldEntityValueArray) AS Message_Locate2;
-			-- end: for test
-			
 		END WHILE;
 		SET FOREIGN_KEY_CHECKS = 1;
 	END $$
@@ -308,69 +280,5 @@ SET @valueFieldEntityValueArray = '"Entity","Language","Individual","Name"';
 SET @valueFieldEntityValueArraySeparator = ',';
 CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@databaseName, @entityName, @valueFieldEntityKey, @valueFieldEntityValueArray, @valueFieldEntityValueArraySeparator);
 
-/*	
-	SET @separator = '|';
-	SET @separatorLength = CHAR_LENGTH(@separator);
-	
-	DECLARE i INT DEFAULT 1;
-	
-	WHILE (i<=2) DO
-		SET @valueFieldEntityValue = SUBSTRING_INDEX(@valueFieldEntityValueArray, @separator, 1);
-		
-		-- DO WORK
-		SELECT @valueFieldEntityValue AS Message_valueFieldEntityValue;
-		
-		SET @valueFieldEntityValueArray = SUBSTRING(@valueFieldEntityValueArray, CHAR_LENGTH(@valueFieldEntityValue) + @separatorLength + 1);
-		SET i=i+1;
-	END WHILE;
-	
-	
-	
---	WHILE (@valueFieldEntityValueArray != '') > 0 DO
---		SET @currentValue = SUBSTRING_INDEX(@valueFieldEntityValueArray, @separator, 1);
-	 
-		-- DO WORK
---		SELECT @currentValue AS Message_CurrentValue;
-	 
---		SET @valueFieldEntityValueArray = SUBSTRING(@valueFieldEntityValueArray, CHAR_LENGTH(@currentValue) + @separatorLength + 1);
---	END WHILE;
-	
-*/	
-	
-	
-/*	
-	WHILE (LOCATE('|', @valueFieldEntityValueArray) > 0) DO
-	
-		SELECT LOCATE('|', @valueFieldEntityValueArray) AS Message_Locate;
-	
-		SET @valueFieldEntityValue = ELT(1, @valueFieldEntityValueArray);
-		
-		SELECT @valueFieldEntityValueArray AS Message_valueFieldEntityValueArray;
-		SELECT @valueFieldEntityValue AS Message_valueFieldEntityValue;
-		
-		SET @valueFieldEntityValue = SUBSTRING(@valueFieldEntityValueArray, LOCATE('|',@valueFieldEntityValueArray) + 1);
-		START TRANSACTION;
-			SET @query = CONCAT('
-				INSERT INTO `',@databaseName,'`.`',@tableEntityName,'` 
-				VALUES(
-				 ',@valueFieldPrimaryKeyEntityID,',
-				 ',@valueFieldForeignKeyParentID,',
-				"',@valueFieldEntityKey,'",
-				"',@valueFieldEntityValue,'",
-				 ',@valueForeignKeyKindOfEntityID,',
-				 ',@valueForeignKeyLanguageID,',
-				"',@valueTimeStampCreated,'",
-				"',@valueTimeStampUpdated,'");
-			');
-			SELECT @query AS Message;
-			PREPARE stmt FROM @query;
-			EXECUTE stmt;
-			DEALLOCATE PREPARE stmt;
-		COMMIT;
-		SET @valueFieldPrimaryKeyEntityID = @valueFieldPrimaryKeyEntityID + 1;
-		SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;
-	END WHILE;	
-*/	
-	
-	-- Set foreign key checks to on
---	SET FOREIGN_KEY_CHECKS = 1;
+-- NEXT: we can now create tables based on the entity names stored in tbl_entity.EntityValue
+-- TO DO:
