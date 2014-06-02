@@ -1,10 +1,8 @@
 -- Name: CreateDatabase
 -- Description: An sql statement that creates a database 'bits' 
-SET @DATABASE_NAME ="bits";
+SET @databaseName ="bits";
 DROP DATABASE IF EXISTS `bits`;
-CREATE DATABASE IF NOT EXISTS `bits` 
-CHARACTER SET 'utf8'
-COLLATE 'utf8_bin';
+CREATE DATABASE IF NOT EXISTS `bits` CHARACTER SET 'utf8' COLLATE 'utf8_bin';
 -- Name: sp_CreateTablesAndViews
 -- Description: A stored procedure that creates tables and views
 -- Parameters:
@@ -162,12 +160,13 @@ DELIMITER $$
 DROP PROCEDURE IF EXISTS `bits`.`SP_MAIN`;
 CREATE PROCEDURE `bits`.`SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
+	    SET @entityName = ENTITY_NAME;
 		-- Create the table that will contain all entities, for which individual tables will be created later on
-		CALL `bits`.SP_CREATE_TABLES_AND_VIEWS(@ENTITY_NAME);
+		CALL `bits`.SP_CREATE_TABLES_AND_VIEWS(@entityName);
 		-- Insert all entities
 		
 /* 		SET @myArrayOfValue = '2,5,2,23,6,';
-		SET @myArrayOfValueCOmplex = '3,17';
+		SET @myArrayOfValueComplex = '3,17';
 
 		INSERT INTO `bits`.`tbl_kind_of_entity` VALUES(1,1,'Kind of Entity','Simple', 0, '', '');
 		INSERT INTO `bits`.`tbl_kind_of_entity` VALUES(2,2,'Kind of Entity','Complex', 0, '', '');
@@ -187,14 +186,12 @@ CREATE PROCEDURE `bits`.`SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET
 	END $$
 DELIMITER ;	
 -- Call stored procedure main, proving it with the database name and entity name
-SET @ENTITY_NAME = 'Language';
-CALL `bits`.SP_MAIN(@DATABASE_NAME, @ENTITY_NAME);
+SET @entityName = 'Language';
+CALL `bits`.SP_MAIN(@databaseName, @entityName);
 	-- Set names
 	SET NAMES utf8;
 	-- Set foreign key checks to off
 	SET FOREIGN_KEY_CHECKS = 0;	
-	SET @entityName = @ENTITY_NAME;
-	SET @databaseName = @DATABASE_NAME;
 	SET @tableEntityName = CONCAT('tbl_', @entityName);
 	SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
 	SET @valueFieldPrimaryKeyEntityID = 1;
@@ -228,39 +225,60 @@ CALL `bits`.SP_MAIN(@DATABASE_NAME, @ENTITY_NAME);
 -- Create stored procedure that inserts an array of values
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `bits`.`SP_INSERT_ARRAY_OF_VALUES`;
-CREATE PROCEDURE `bits`.`SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_KEY` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_VALUE_ARRAY` varchar(255) CHARACTER SET 'utf8')
+CREATE PROCEDURE `bits`.`SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_KEY` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_VALUE_ARRAY` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_VALUE_ARRAY_SEPARATOR` varchar(1) CHARACTER SET 'utf8')
 	BEGIN
-		SET @entityName = @ENTITY_NAME;
-		SET @databaseName = @DATABASE_NAME;
+		SET @separator = VALUE_FIELD_ENTITY_VALUE_ARRAY_SEPARATOR;
+        SET @separatorLength = CHAR_LENGTH(@separator);
+		SET @entityName = ENTITY_NAME;
+		SET @databaseName = DATABASE_NAME;
 		SET @tableEntityName = CONCAT('tbl_', @entityName);
 		SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
 		SET @valueFieldPrimaryKeyEntityID = 1;
 		SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;	
-		SET @valueFieldEntityKey = @VALUE_FIELD_ENTITY_KEY;
-		SET @valueFieldEntityValueArray = @VALUE_FIELD_ENTITY_VALUE_ARRAY;
+		SET @valueFieldEntityKey = VALUE_FIELD_ENTITY_KEY;
+		SET @valueFieldEntityValueArray = CONCAT(VALUE_FIELD_ENTITY_VALUE_ARRAY, @separator); -- LOCATE requires the array to end with a separator
 		SET @valueForeignKeyKindOfEntityID = 0;
 		SET @valueForeignKeyLanguageID = 1;
 		SET @valueTimeStampCreated = CAST('0000-00-00 00:00:00' AS DATETIME);
 		SET @valueTimeStampUpdated = CAST('0000-00-00 00:00:00' AS DATETIME);
 		SET NAMES utf8;
 		SET FOREIGN_KEY_CHECKS = 0;	
-		SET @iterator = 5; -- Make this actually a count of the number of items in the entity value array
-		WHILE @iterator > 0 DO
-		    -- NOTE: For some reason variables are not being recognized, 
-			-- also apparently variables within a while loop should not start with an @
+		
+		-- SET @iterator = 1;
+		-- WHILE @iterator <=2 DO
+		
+		WHILE (LOCATE(@separator, @valueFieldEntityValueArray) > 0) DO
+		
+		    -- SET @valueFieldEntityValue = SUBSTRING_INDEX(@valueFieldEntityValueArray, @separator, 1);
+			
+			SET @valueFieldEntityValue = ELT(1, @valueFieldEntityValueArray);
+			
+			-- start: for test
+			SELECT LOCATE(@separator, @valueFieldEntityValueArray) AS Message_Locate1;
+			SELECT @valueFieldEntityValueArray AS Message_valueFieldEntityValueArray1;			
+			SELECT @valueFieldEntityValue AS Message_valueFieldEntityValue1;	
+			-- end: for test
+			
+			SET @valueFieldEntityValueArray = SUBSTRING(@valueFieldEntityValueArray, LOCATE(@separator,@valueFieldEntityValueArray) + 1);
+			
+			-- start: for test
+			SELECT @valueFieldEntityValueArray AS Message_valueFieldEntityValueArray2;
+			SELECT @valueFieldEntityValue AS Message_valueFieldEntityValue2;	
+			-- end: for test
+			
 			START TRANSACTION;
-				SET @query = CONCAT('
-					INSERT INTO `',@databaseName,'`.`',@tableEntityName,'` 
+				SET @query = CONCAT("
+					INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
 					VALUES(
-					 ',@valueFieldPrimaryKeyEntityID,',
-					 ',@valueFieldForeignKeyParentID,',
-					"',@valueFieldEntityKey,'",
-					"',@valueFieldEntityValue,'",
-					 ',@valueForeignKeyKindOfEntityID,',
-					 ',@valueForeignKeyLanguageID,',
-					"',@valueTimeStampCreated,'",
-					"',@valueTimeStampUpdated,'");
-				');
+					 ",@valueFieldPrimaryKeyEntityID,",
+					 ",@valueFieldForeignKeyParentID,",
+					'",@valueFieldEntityKey,"',
+					'",@valueFieldEntityValue,"',
+					 ",@valueForeignKeyKindOfEntityID,",
+					 ",@valueForeignKeyLanguageID,",
+					'",@valueTimeStampCreated,"',
+					'",@valueTimeStampUpdated,"');
+				");
 				SELECT @query AS Message;
 				PREPARE stmt FROM @query;
 				EXECUTE stmt;
@@ -268,21 +286,28 @@ CREATE PROCEDURE `bits`.`SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(
 			COMMIT;
 			SET @valueFieldPrimaryKeyEntityID = @valueFieldPrimaryKeyEntityID + 1;
 			SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;
-
-			SET @iterator = @iterator - 1;
+			
+			-- TEMP to stop while loop:
+			-- SET @valueFieldEntityValueArray = '';
+			-- SET @iterator = @iterator + 1;
+			
+			-- start: for test
+			SELECT LOCATE(@separator, @valueFieldEntityValueArray) AS Message_Locate2;
+			-- end: for test
+			
 		END WHILE;
 		SET FOREIGN_KEY_CHECKS = 1;
 	END $$
 DELIMITER ;
 -- Call stored procedure main, proving it with the database name and entity name	
-SET @ENTITY_NAME = 'Entity';
-CALL `bits`.SP_MAIN(@DATABASE_NAME, @ENTITY_NAME);
+SET @entityName = 'Entity';
+CALL `bits`.SP_MAIN(@databaseName, @entityName);
 -- Set values for entity table, then call stored procedure insert array of values, providing it with the key and array of values
-SET @VALUE_FIELD_ENTITY_KEY = 'Entity';
-SET @VALUE_FIELD_ENTITY_VALUE_ARRAY = 'Entity|Language|Individual|Name';
-CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@DATABASE_NAME, @ENTITY_NAME, @VALUE_FIELD_ENTITY_KEY, @VALUE_FIELD_ENTITY_VALUE_ARRAY);
+SET @valueFieldEntityKey = 'Entity';
+SET @valueFieldEntityValueArray = '"Entity","Language","Individual","Name"';
+SET @valueFieldEntityValueArraySeparator = ',';
+CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@databaseName, @entityName, @valueFieldEntityKey, @valueFieldEntityValueArray, @valueFieldEntityValueArraySeparator);
 
-	
 /*	
 	SET @separator = '|';
 	SET @separatorLength = CHAR_LENGTH(@separator);
