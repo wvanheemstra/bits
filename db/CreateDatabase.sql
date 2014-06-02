@@ -3,7 +3,9 @@
 -- ================ CUSTOM CONFIGURATIONS ======================================
 SET @databaseName ='bits'; -- 'bits' is mandatory
 SET @databaseSimpleEntities = '"Entity","Language","Individual","Name"'; -- Entity & Language are mandatory
-SET @databaseComplexEntities = '"Membership","Whereabouts"'; -- Entities with fields other than the default fields
+SET @databaseComplexEntities = '"Membership","Whereabouts"'; -- Entities with fields other than the default fields, e.g. Membership
+SET @databaseSimpleLinkedEntities = '"Entity-Name","Language-Name","Individual-Name"'; -- e.g. Entity-Name
+SET @databaseComplexLinkedEntities = '';
 SET @databaseLanguage = 'English'; -- 'English' is mandatory
 -- ================ DO NOT CHANGE ANYTHING BELOW THIS LINE =====================
 DROP DATABASE IF EXISTS `bits`;
@@ -286,6 +288,7 @@ SET @valueFieldEntityValueArraySeparator = ',';
 CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@databaseName, @entityName, @valueFieldEntityKey, @valueFieldEntityValueArray, @valueFieldEntityValueArraySeparator);
 -- Create a stored procedure that creates tables based on the entity names stored in tbl_entity.EntityValue
 DELIMITER $$
+DROP PROCEDURE IF EXISTS `bits`.`SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS`;
 CREATE PROCEDURE `bits`.`SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `TABLE_NAME` varchar(255) CHARACTER SET 'utf8', IN `FIELD_KEY_NAME` varchar(255) CHARACTER SET 'utf8', IN `KEY_VALUE` varchar(255) CHARACTER SET 'utf8', IN `FIELD_VALUE_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
 		DECLARE findFinished INTEGER DEFAULT 0;
@@ -323,3 +326,15 @@ SET @keyValue = 'Entity';
 SET @fieldValueName = 'EntityValue';
 CALL `bits`.SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS(@databaseName, @tableName, @fieldKeyName, @keyValue, @fieldValueName);
 -- By now all simple entity tables and views should have been created (excluding link tables)
+-- Create procedure create link tables
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `bits`.`SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS`;
+CREATE PROCEDURE `bits`.`SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES_NAMES` varchar(255) CHARACTER SET 'utf8')
+	BEGIN
+	
+	
+		-- more ...
+	END $$
+DELIMITER ;
+-- Call procedure create link tables, for each entry in @databaseSimpleLinkedEntities
+-- to do ...
