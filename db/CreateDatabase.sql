@@ -330,11 +330,81 @@ CALL SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS(@databaseName, @tableName, @fiel
 -- Create procedure create link tables
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS`;
-CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES_NAMES` varchar(255) CHARACTER SET 'utf8')
+CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES_NAMES` varchar(255) CHARACTER SET 'utf8', IN `LINKED_ENTITIES_NAMES_SEPARATOR` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
-	
-	
-		-- more ...
+		SET @linkedEntitiesNames = LINKED_ENTITIES_NAMES;
+		SET @separator = LINKED_ENTITIES_NAMES_SEPARATOR;
+		SET @firstEntityName = SUBSTRING_INDEX(@linkedEntitiesNames, @separator, 1);
+		SET @secondEntityName = REPLACE(@linkedEntitiesNames,CONCAT(@firstEntityName, @separator),'');
+		SELECT @firstEntityName AS Message_FirstEntityName;
+		SELECT @secondEntityName AS Message_SecondEntityName;
+		SET @tableLinkedEntitiesNames = CONCAT('tbl_', @firstEntityName, '_',  @secondEntityName);
+		SET @fieldPrimaryKeyLinkedEntitiesID = CONCAT('pk_', @firstEntityName, @secondEntityName, 'ID');
+		SET @fieldForeignKeyFirstEntityID = CONCAT('fk_', @firstEntityName, 'ID');
+		SET @fieldForeignKeySecondEntityID = CONCAT('fk_', @secondEntityName, 'ID');
+		SET @fieldTimeStampCreated = 'ts_Created';
+		SET @fieldTimeStampUpdated = 'ts_Updated';
+		SET @tableFirstEntityName = CONCAT('tbl_', @firstEntityName);
+		SET @tableSecondEntityName = CONCAT('tbl_', @secondEntityName);
+		SET @viewLinkedEntitiesNames = CONCAT(@firstEntityName, '_', @secondEntityName);
+		SET @fieldPrimaryKeyFirstEntityID = CONCAT('pk_', @firstEntityName, 'ID');
+		SET @fieldPrimaryKeySecondEntityID = CONCAT('pk_', @secondEntityName, 'ID');
+		-- Set names
+		SET NAMES utf8;
+		-- Set foreign key checks to off
+		SET FOREIGN_KEY_CHECKS = 0;	
+		-- LINKED ENTITIES
+		START TRANSACTION;
+			SELECT CONCAT('Creating Linked Entities table for: ', @linkedEntitiesNames) AS Message;
+			-- Drop entity table		
+			SET @query = CONCAT('
+				DROP TABLE IF EXISTS `' , @tableLinkedEntitiesNames, '`;
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;	
+			-- Create linked entities table
+			SET @query = CONCAT('
+				CREATE TABLE IF NOT EXISTS `' , @tableLinkedEntitiesNames, '` (
+					`' , @fieldPrimaryKeyLinkedEntitiesID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+					`' , @fieldForeignKeyFirstEntityID, '` INT(11) UNSIGNED NOT NULL,
+					`' , @fieldForeignKeySecondEntityID, '` INT(11) UNSIGNED NOT NULL,			
+					`' , @fieldTimeStampCreated, '` DATETIME DEFAULT NULL,
+					`' , @fieldTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					PRIMARY KEY (`' , @fieldPrimaryKeyLinkedEntitiesID, '`),
+					FOREIGN KEY (`' , @fieldForeignKeyFirstEntityID, '`) REFERENCES `' , @tableFirstEntityName, '` (`' , @fieldPrimaryKeyFirstEntityID, '`) ON DELETE CASCADE,
+					FOREIGN KEY (`' , @fieldForeignKeySecondEntityID, '`) REFERENCES `' , @tableSecondEntityName, '` (`' , @fieldPrimaryKeySecondEntityID, '`) ON DELETE CASCADE					
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+			');
+			SELECT CONCAT(@query) AS Message;			
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+			-- Drop linked entities view
+			SET @query = CONCAT('
+				DROP VIEW IF EXISTS `' , @viewLinkedEntitiesNames, '`;
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+			-- Create entity view
+			SELECT CONCAT('Creating Linked Entities view for: ', @linkedEntitiesNames) AS Message;
+			SET @query = CONCAT('
+				CREATE VIEW `' , @viewLinkedEntitiesNames, '` AS
+					SELECT `' , @fieldPrimaryKeyLinkedEntitiesID, '`,		
+					`' , @fieldForeignKeyFirstEntityID, '`,
+					`' , @fieldForeignKeySecondEntityID, '`,
+					`' , @fieldTimeStampCreated, '`,
+					`' , @fieldTimeStampUpdated, '`
+					FROM ' , @tableLinkedEntitiesNames, ';
+			');
+			SELECT CONCAT(@query) AS Message;
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+		COMMIT;
+		-- Set foreign key checks to on
+		SET FOREIGN_KEY_CHECKS = 1;	
 	END $$
 DELIMITER ;
 -- Call procedure create link tables, for each entry in @databaseSimpleLinkedEntities
