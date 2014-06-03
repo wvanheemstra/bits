@@ -6,6 +6,7 @@ SET @databaseSimpleEntities = '"Entity","Language","Individual","Name"'; -- Enti
 SET @databaseComplexEntities = '"Membership","Whereabouts"'; -- Entities with fields other than the default fields, e.g. Membership
 SET @databaseSimpleLinkedEntities = '"Entity-Name","Language-Name","Individual-Name"'; -- e.g. Entity-Name
 SET @databaseComplexLinkedEntities = '';
+SET @databaseSimpleLinkedEntitiesSeparator = '-';
 SET @databaseLanguage = 'English'; -- 'English' is mandatory
 -- ================ DO NOT CHANGE ANYTHING BELOW THIS LINE =====================
 DROP DATABASE IF EXISTS `bits`;
@@ -153,7 +154,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		COMMIT;		
 		-- Set foreign key checks to on
 		SET FOREIGN_KEY_CHECKS = 1;	
-	END $$
+	END; $$
 DELIMITER ;
 -- Name: sp_Main
 -- Description: A stored procedure that contains the main procedures, 
@@ -191,7 +192,7 @@ CREATE PROCEDURE `SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8'
 		
 		-- TO DO
 	
-	END $$
+	END; $$
 DELIMITER ;	
 -- Call stored procedure main, proving it with the database name and entity name
 SET @entityName = 'Language';
@@ -277,7 +278,7 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(255) CH
 			SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;
 		END WHILE;
 		SET FOREIGN_KEY_CHECKS = 1;
-	END $$
+	END; $$
 DELIMITER ;
 -- Call stored procedure main, proving it with the database name and entity name	
 SET @entityName = 'Entity';
@@ -317,7 +318,7 @@ CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME
 			END CASE;
 		END LOOP getFieldValue;
 		CLOSE fieldValueCursor;
-	END $$
+	END; $$
 DELIMITER ;
 -- Call stored procedure loop field call create tables and views, 
 -- proving it with the database name, table name, 
@@ -405,7 +406,44 @@ CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES
 		COMMIT;
 		-- Set foreign key checks to on
 		SET FOREIGN_KEY_CHECKS = 1;	
-	END $$
+	END; $$
 DELIMITER ;
--- Call procedure create link tables, for each entry in @databaseSimpleLinkedEntities
--- to do ...
+-- Create the split string function
+DELIMITER $$
+DROP FUNCTION IF EXISTS `FN_SPLIT_STRING`;
+CREATE FUNCTION `FN_SPLIT_STRING` (str VARCHAR(255), delim VARCHAR(12), pos INT)
+	RETURNS VARCHAR(255)
+	BEGIN
+		RETURN REPLACE(SUBSTRING(SUBSTRING_INDEX(str, delim, pos),
+		LENGTH(SUBSTRING_INDEX(str, delim, pos -1)) + 1),
+		delim, '');
+	END; $$
+DELIMITER ;
+-- Create procedure create multiple linked entities tables, for each entry in @databaseSimpleLinkedEntities
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS`;
+CREATE PROCEDURE `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `MULTIPLE_LINKED_ENTITIES_NAMES` varchar(255) CHARACTER SET 'utf8', IN `LINKED_ENTITIES_NAMES_SEPARATOR` varchar(255) CHARACTER SET 'utf8')
+	BEGIN
+		SET @multipleLinkedEntitiesNames = MULTIPLE_LINKED_ENTITIES_NAMES;
+		SET @linkedEntitiesNamesSeparator = LINKED_ENTITIES_NAMES_SEPARATOR;
+		SET @counter = 1;
+		WHILE (@counter > 0) DO
+			SET @delimiter = ',';
+			SET @linkedEntitiesNames = SELECT FN_SPLIT_STRING(@multipleLinkedEntitiesNames, @delimiter, @counter);
+			
+		--	SET @linkedEntitiesNames = ''; -- TEMP, for testing only!!
+			
+			IF @linkedEntitiesNames = '' THEN
+				SET @counter = 0;
+			ELSE
+				-- to do: CALL SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS(@linkedEntitiesNames, @linkedEntitiesNamesSeparator)
+				SET @counter = @counter + 1;
+			END IF;
+		END WHILE;
+	END; $$
+DELIMITER ;
+-- Call procedure create multiple linked entities tables, for complete @databaseSimpleLinkedEntities and @databaseSimpleLinkedEntitiesSeparator
+SET @multipleLinkedEntitiesNames = @databaseSimpleLinkedEntities;
+SET @linkedEntitiesNamesSeparator = @databaseSimpleLinkedEntitiesSeparator;
+CALL SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS(@multipleLinkedEntitiesNames, @linkedEntitiesNamesSeparator);
+
