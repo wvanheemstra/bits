@@ -18,8 +18,9 @@ CREATE DATABASE IF NOT EXISTS `bits` CHARACTER SET 'utf8' COLLATE 'utf8_bin';
 -- CALL SP_CREATE_TABLES_AND_VIEWS(Foo);
 -- where Foo is the entity name 
 DELIMITER $$
-DROP PROCEDURE IF EXISTS `bits`.`SP_CREATE_TABLES_AND_VIEWS`;
-CREATE PROCEDURE `bits`.`SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
+USE bits; -- from now on all refers to this database
+DROP PROCEDURE IF EXISTS `SP_CREATE_TABLES_AND_VIEWS`;
+CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
 		SET @entityName = ENTITY_NAME;
 		SET @tableEntityName = CONCAT('tbl_', @entityName);
@@ -164,8 +165,8 @@ DELIMITER ;
 -- where Foo is the database name
 -- and Bar is the entity name 
 DELIMITER $$
-DROP PROCEDURE IF EXISTS `bits`.`SP_MAIN`;
-CREATE PROCEDURE `bits`.`SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
+DROP PROCEDURE IF EXISTS `SP_MAIN`;
+CREATE PROCEDURE `SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
 	    SET @entityName = ENTITY_NAME;
 		-- Create the table that will contain all entities, for which individual tables will be created later on
@@ -194,7 +195,7 @@ CREATE PROCEDURE `bits`.`SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET
 DELIMITER ;	
 -- Call stored procedure main, proving it with the database name and entity name
 SET @entityName = 'Language';
-CALL `bits`.SP_MAIN(@databaseName, @entityName);
+CALL SP_MAIN(@databaseName, @entityName);
 	-- Set names
 	SET NAMES utf8;
 	-- Set foreign key checks to off
@@ -231,8 +232,8 @@ CALL `bits`.SP_MAIN(@databaseName, @entityName);
 	SET FOREIGN_KEY_CHECKS = 1;
 -- Create stored procedure that inserts an array of values
 DELIMITER $$
-DROP PROCEDURE IF EXISTS `bits`.`SP_INSERT_ARRAY_OF_VALUES`;
-CREATE PROCEDURE `bits`.`SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_KEY` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_VALUE_ARRAY` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_VALUE_ARRAY_SEPARATOR` varchar(1) CHARACTER SET 'utf8')
+DROP PROCEDURE IF EXISTS `SP_INSERT_ARRAY_OF_VALUES`;
+CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_KEY` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_VALUE_ARRAY` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_VALUE_ARRAY_SEPARATOR` varchar(1) CHARACTER SET 'utf8')
 	BEGIN
 		SET @separator = VALUE_FIELD_ENTITY_VALUE_ARRAY_SEPARATOR;
         SET @separatorLength = CHAR_LENGTH(@separator);
@@ -280,7 +281,7 @@ CREATE PROCEDURE `bits`.`SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(
 DELIMITER ;
 -- Call stored procedure main, proving it with the database name and entity name	
 SET @entityName = 'Entity';
-CALL `bits`.SP_MAIN(@databaseName, @entityName);
+CALL SP_MAIN(@databaseName, @entityName);
 -- Set values for entity table, then call stored procedure insert array of values, providing it with the key and array of values
 SET @valueFieldEntityKey = 'Entity';
 SET @valueFieldEntityValueArray = @databaseSimpleEntities;
@@ -288,8 +289,8 @@ SET @valueFieldEntityValueArraySeparator = ',';
 CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@databaseName, @entityName, @valueFieldEntityKey, @valueFieldEntityValueArray, @valueFieldEntityValueArraySeparator);
 -- Create a stored procedure that creates tables based on the entity names stored in tbl_entity.EntityValue
 DELIMITER $$
-DROP PROCEDURE IF EXISTS `bits`.`SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS`;
-CREATE PROCEDURE `bits`.`SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `TABLE_NAME` varchar(255) CHARACTER SET 'utf8', IN `FIELD_KEY_NAME` varchar(255) CHARACTER SET 'utf8', IN `KEY_VALUE` varchar(255) CHARACTER SET 'utf8', IN `FIELD_VALUE_NAME` varchar(255) CHARACTER SET 'utf8')
+DROP PROCEDURE IF EXISTS `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS`;
+CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `TABLE_NAME` varchar(255) CHARACTER SET 'utf8', IN `FIELD_KEY_NAME` varchar(255) CHARACTER SET 'utf8', IN `KEY_VALUE` varchar(255) CHARACTER SET 'utf8', IN `FIELD_VALUE_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
 		DECLARE findFinished INTEGER DEFAULT 0;
 		DECLARE fieldValue varchar(255) DEFAULT "";
@@ -324,12 +325,12 @@ SET @tableName = 'tbl_entity';
 SET @fieldKeyName = 'EntityKey';
 SET @keyValue = 'Entity';
 SET @fieldValueName = 'EntityValue';
-CALL `bits`.SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS(@databaseName, @tableName, @fieldKeyName, @keyValue, @fieldValueName);
+CALL SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS(@databaseName, @tableName, @fieldKeyName, @keyValue, @fieldValueName);
 -- By now all simple entity tables and views should have been created (excluding link tables)
 -- Create procedure create link tables
 DELIMITER $$
-DROP PROCEDURE IF EXISTS `bits`.`SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS`;
-CREATE PROCEDURE `bits`.`SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES_NAMES` varchar(255) CHARACTER SET 'utf8')
+DROP PROCEDURE IF EXISTS `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS`;
+CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES_NAMES` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
 	
 	
