@@ -429,14 +429,13 @@ CREATE PROCEDURE `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `MULTIP
 		SET @counter = 1;
 		WHILE (@counter > 0) DO
 			SET @delimiter = ',';
-			SET @linkedEntitiesNames = SELECT FN_SPLIT_STRING(@multipleLinkedEntitiesNames, @delimiter, @counter);
-			
-		--	SET @linkedEntitiesNames = ''; -- TEMP, for testing only!!
-			
+			SET @linkedEntitiesNames = FN_SPLIT_STRING(@multipleLinkedEntitiesNames, @delimiter, @counter);
+			SET @linkedEntitiesNames = REPLACE(@linkedEntitiesNames,'"',''); -- removes double quotes
+			SELECT 	@linkedEntitiesNames AS Message_LinkedEntitiesNames;
 			IF @linkedEntitiesNames = '' THEN
 				SET @counter = 0;
 			ELSE
-				-- to do: CALL SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS(@linkedEntitiesNames, @linkedEntitiesNamesSeparator)
+				CALL SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS(@linkedEntitiesNames, @linkedEntitiesNamesSeparator);
 				SET @counter = @counter + 1;
 			END IF;
 		END WHILE;
