@@ -1,5 +1,7 @@
 -- Name: CreateDatabase
 -- Description: An sql statement that creates a database 'bits'
+-- Note: The EntityValue field allows for JSON data, 
+--       with a size of maximum 5000 characters
 -- ================ CUSTOM CONFIGURATIONS ======================================
 SET @databaseName ='bits'; -- 'bits' is mandatory
 SET @databaseSimpleEntities = '"Entity","Language","Individual","Name"'; -- Entity & Language are mandatory
@@ -61,7 +63,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 					`' , @fieldPrimaryKeyKindOfEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 					`' , @fieldForeignKeyParentID, '` INT(11) UNSIGNED NOT NULL,
 					`' , @fieldKindOfEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
-					`' , @fieldKindOfEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
+					`' , @fieldKindOfEntityValue, '`  VARCHAR(5000) COLLATE utf8_bin NOT NULL,
 					`' , @fieldForeignKeyLanguageID, '` INT(11) UNSIGNED NOT NULL DEFAULT 0,
 					`' , @fieldTimeStampCreated, '` DATETIME DEFAULT NULL,
 					`' , @fieldTimeStampUpdated, '` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -113,7 +115,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 					`' , @fieldPrimaryKeyEntityID, '` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 					`' , @fieldForeignKeyParentID, '` INT(11) UNSIGNED NOT NULL,			
 					`' , @fieldEntityKey, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
-					`' , @fieldEntityValue, '`  VARCHAR(255) COLLATE utf8_bin NOT NULL,
+					`' , @fieldEntityValue, '`  VARCHAR(5000) COLLATE utf8_bin NOT NULL,
 					`' , @fieldForeignKeyKindOfEntityID, '` INT(11) UNSIGNED NOT NULL DEFAULT 0,
 					`' , @fieldForeignKeyLanguageID, '` INT(11) UNSIGNED NOT NULL DEFAULT 0,			
 					`' , @fieldTimeStampCreated, '` DATETIME DEFAULT NULL,
@@ -294,7 +296,7 @@ DROP PROCEDURE IF EXISTS `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS`;
 CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `TABLE_NAME` varchar(255) CHARACTER SET 'utf8', IN `FIELD_KEY_NAME` varchar(255) CHARACTER SET 'utf8', IN `KEY_VALUE` varchar(255) CHARACTER SET 'utf8', IN `FIELD_VALUE_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
 		DECLARE findFinished INTEGER DEFAULT 0;
-		DECLARE fieldValue varchar(255) DEFAULT "";
+		DECLARE fieldValue varchar(5000) DEFAULT "";
 		-- Declare cursor for field value
 		DECLARE fieldValueCursor CURSOR FOR
 			SELECT `EntityValue` FROM `bits`.`tbl_entity` WHERE `EntityKey` = 'Entity';	
@@ -411,7 +413,7 @@ DELIMITER ;
 -- Create the split string function
 DELIMITER $$
 DROP FUNCTION IF EXISTS `FN_SPLIT_STRING`;
-CREATE FUNCTION `FN_SPLIT_STRING` (str VARCHAR(255), delim VARCHAR(12), pos INT)
+CREATE FUNCTION `FN_SPLIT_STRING` (str VARCHAR(5000), delim VARCHAR(12), pos INT)
 	RETURNS VARCHAR(255)
 	BEGIN
 		RETURN REPLACE(SUBSTRING(SUBSTRING_INDEX(str, delim, pos),
@@ -422,7 +424,7 @@ DELIMITER ;
 -- Create procedure create multiple linked entities tables, for each entry in @databaseSimpleLinkedEntities
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS`;
-CREATE PROCEDURE `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `MULTIPLE_LINKED_ENTITIES_NAMES` varchar(255) CHARACTER SET 'utf8', IN `LINKED_ENTITIES_NAMES_SEPARATOR` varchar(255) CHARACTER SET 'utf8')
+CREATE PROCEDURE `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `MULTIPLE_LINKED_ENTITIES_NAMES` varchar(5000) CHARACTER SET 'utf8', IN `LINKED_ENTITIES_NAMES_SEPARATOR` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
 		SET @multipleLinkedEntitiesNames = MULTIPLE_LINKED_ENTITIES_NAMES;
 		SET @linkedEntitiesNamesSeparator = LINKED_ENTITIES_NAMES_SEPARATOR;
