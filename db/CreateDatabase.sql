@@ -81,7 +81,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 			');
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
-			DEALLOCATE PREPARE stmt;		
+			DEALLOCATE PREPARE stmt;
 			-- Create kind of entity view
 			SELECT CONCAT('Creating Kind of Entity view for: ', @entityName) AS Message;		
 			SET @query = CONCAT('
@@ -94,6 +94,15 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 					`' , @fieldTimeStampCreated, '`,
 					`' , @fieldTimeStampUpdated, '`
 					FROM ' , @tableKindOfEntityName, ';
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+		COMMIT;
+		START TRANSACTION;
+			-- Alter kind of entity table to add indices
+			SET @query = CONCAT('
+				ALTER TABLE `' , @tableKindOfEntityName, '` ADD INDEX `' , @fieldKindOfEntityKey, '` (`' , @fieldKindOfEntityKey, '`);
 			');
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
@@ -153,7 +162,16 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
-		COMMIT;		
+		COMMIT;
+		START TRANSACTION;
+			-- Alter entity table to add indices
+			SET @query = CONCAT('
+				ALTER TABLE `' , @tableEntityName, '` ADD INDEX `' , @fieldEntityKey, '` (`' , @fieldEntityKey, '`);
+			');
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+		COMMIT;
 		-- Set foreign key checks to on
 		SET FOREIGN_KEY_CHECKS = 1;	
 	END; $$
@@ -390,7 +408,7 @@ CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
-			-- Create entity view
+			-- Create linked entities view
 			SELECT CONCAT('Creating Linked Entities view for: ', @linkedEntitiesNames) AS Message;
 			SET @query = CONCAT('
 				CREATE VIEW `' , @viewLinkedEntitiesNames, '` AS
