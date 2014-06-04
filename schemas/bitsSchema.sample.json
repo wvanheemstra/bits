@@ -1,7 +1,7 @@
 {
     "domains": {
         "bits": {
-            "schema_name": "bits", 
+            "schema_name": "bits",
             "types": {
                 "individual": {
                     "properties": {
