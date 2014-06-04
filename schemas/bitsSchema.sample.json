@@ -1,0 +1,225 @@
+{
+    "domains": {
+        "bits": {
+            "schema_name": "bits", 
+            "types": {
+                "individual": {
+                    "properties": {
+                        "pk_IndividualID": {
+                            "column_name": "pk_IndividualID", 
+                            "nullable": false, 
+                            "type": "/type/int"
+                        },
+                        "fk_ParentID": {
+                            "column_name": "fk_ParentID", 
+                            "nullable": true,
+                            "type": "/type/int"
+                        },
+                        "IndividualKey": {
+                            "column_name": "IndividualKey", 
+                            "nullable": false, 
+                            "type": "/type/text"
+                        },
+                        "IndividualValue": {
+                            "column_name": "IndividualValue", 
+                            "nullable": false, 
+                            "type": "/type/text"
+                        },
+                        "fk_KindOfIndividualID": {
+                            "column_name": "fk_KindOfIndividualID", 
+                            "nullable": true,
+                            "type": "/type/int"
+                        },
+                        "IndividualParent": {
+                            "type": "/bits/individual",
+                            "direction": "referencing->referenced",
+                            "join_condition": [
+                                {
+                                    "referencing_column": "pk_IndividualID",
+                                    "referenced_column": "fk_ParentID"
+                                }
+                            ],
+                            "nullable": true
+                        },
+                        "IndividualKindOfIndividual": {
+                            "type": "/bits/kindOfIndividual",
+                            "direction": "referencing->referenced",
+                            "join_condition": [
+                                {
+                                    "referencing_column": "pk_KindOfIndividualID",
+                                    "referenced_column": "fk_KindOfIndividualID"
+                                }
+                            ],
+                            "nullable": true
+                        },
+                        "IndividualName": {
+                            "type": "/bits/individual_name",
+                            "direction": "referencing->referenced",
+                            "join_condition": [
+                                {
+                                    "referencing_column": "fk_IndividualID",
+                                    "referenced_column": "pk_IndividualID"
+                                }
+                            ],
+                            "nullable": true
+                        }
+                    }, 
+                    "table_name": "tbl_individual",
+                    "keys": {
+                        "PRIMARY": {
+                            "type": "PRIMARY KEY",
+                            "columns": ["pk_IndividualID"]
+                        }
+                    }
+                },
+                "kindOfIndividual": {        
+                    "properties": {
+                        "pk_KindOfIndividualID": {
+                            "column_name": "pk_KindOfIndividualID", 
+                            "nullable": false, 
+                            "type": "/type/int"
+                        },                                
+                        "KindOfIndividualKey": {
+                            "column_name": "KindOfIndividualKey", 
+                            "nullable": false, 
+                            "type": "/type/text"
+                        },                                
+                        "KindOfIndividualValue": {
+                            "column_name": "KindOfIndividualValue", 
+                            "nullable": false, 
+                            "type": "/type/text"
+                        }
+                    }, 
+                    "table_name": "tbl_kind_of_individual",
+                    "keys": {
+                        "PRIMARY": {
+                            "type": "PRIMARY KEY",
+                            "columns": ["pk_KindOfIndividualID"]
+                        }
+                    }     
+                },
+                "individual_name": {        
+                    "properties": {
+                        "fk_IndividualID": {
+                            "column_name": "fk_IndividualID", 
+                            "nullable": false, 
+                            "type": "/type/int"
+                        },
+                        "Individual": {
+                            "type": "/bits/individual",
+                            "direction": "referencing->referenced",
+                            "join_condition": [
+                                {
+                                    "referencing_column": "pk_IndividualID",
+                                    "referenced_column": "fk_IndividualID"
+                                }
+                            ],
+                            "nullable": true
+                        },                                
+                        "fk_NameID": {
+                            "column_name": "fk_NameId", 
+                            "nullable": false, 
+                            "type": "/type/int"
+                        },
+                        "Name": {
+                            "type": "/bits/name",
+                            "direction": "referencing->referenced",
+                            "join_condition": [
+                                {
+                                    "referencing_column": "pk_NameID",
+                                    "referenced_column": "fk_NameID"
+                                }
+                            ],
+                            "nullable": true
+                        }                                
+                    }, 
+                    "table_name": "tbl_individual_name" 
+                },     
+                "name": {
+                    "properties": {
+                        "pk_NameID": {
+                            "column_name": "pk_NameID", 
+                            "nullable": false, 
+                            "type": "/type/int"
+                        },
+                        "fk_ParentID": {
+                            "column_name": "fk_ParentID", 
+                            "nullable": true,
+                            "type": "/type/int"
+                        },
+                        "NameKey": {
+                            "column_name": "NameKey", 
+                            "nullable": false, 
+                            "type": "/type/text"
+                        },
+                        "NameValue": {
+                            "column_name": "NameValue", 
+                            "nullable": false, 
+                            "type": "/type/text"
+                        },
+                        "fk_KindOfNameID": {
+                            "column_name": "fk_KindOfNameID", 
+                            "nullable": true,
+                            "type": "/type/int"
+                        },
+                        "NameParent": {
+                            "type": "/bits/name",
+                            "direction": "referencing->referenced",
+                            "join_condition": [
+                                {
+                                    "referencing_column": "pk_NameID",
+                                    "referenced_column": "fk_ParentID"
+                                }
+                            ],
+                            "nullable": true
+                        },
+                        "NameKindOfIndividual": {
+                            "type": "/bits/kindOfName",
+                            "direction": "referencing->referenced",
+                            "join_condition": [
+                                {
+                                    "referencing_column": "pk_KindOfNameID",
+                                    "referenced_column": "fk_KindOfNameID"
+                                }
+                            ],
+                            "nullable": true
+                        }
+                    }, 
+                    "table_name": "tbl_name",
+                    "keys": {
+                        "PRIMARY": {
+                            "type": "PRIMARY KEY",
+                            "columns": ["pk_NameID"]
+                        }
+                    }
+                },
+                "kindOfName": {        
+                    "properties": {
+                        "pk_KindOfNameID": {
+                            "column_name": "pk_KindOfNameID", 
+                            "nullable": false, 
+                            "type": "/type/int"
+                        },                                
+                        "KindOfNameKey": {
+                            "column_name": "KindOfNameKey", 
+                            "nullable": false, 
+                            "type": "/type/text"
+                        },                                
+                        "KindOfNameValue": {
+                            "column_name": "KindOfNameValue", 
+                            "nullable": false, 
+                            "type": "/type/text"
+                        }
+                    }, 
+                    "table_name": "tbl_kind_of_name",
+                    "keys": {
+                        "PRIMARY": {
+                            "type": "PRIMARY KEY",
+                            "columns": ["pk_KindOfNameID"]
+                        }
+                    }     
+                }
+            }
+        }
+    }
+}
