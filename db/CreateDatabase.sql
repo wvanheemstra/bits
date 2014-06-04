@@ -3,7 +3,7 @@
 -- Note: The EntityValue field allows for JSON data, 
 --       with a size of maximum 5000 characters
 -- ================ CUSTOM CONFIGURATIONS ======================================
-SET @databaseName ='bits'; -- 'bits' is mandatory
+SET @databaseName = LOWER('bits'); -- 'bits' is mandatory
 SET @databaseSimpleEntities = '"Entity","Language","Individual","Name"'; -- Entity & Language are mandatory
 SET @databaseComplexEntities = '"Membership","Whereabouts"'; -- Entities with fields other than the default fields, e.g. Membership
 SET @databaseSimpleLinkedEntities = '"Entity-Name","Language-Name","Individual-Name"'; -- e.g. Entity-Name
@@ -26,7 +26,7 @@ DROP PROCEDURE IF EXISTS `SP_CREATE_TABLES_AND_VIEWS`;
 CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
 		SET @entityName = ENTITY_NAME;
-		SET @tableEntityName = CONCAT('tbl_', @entityName);
+		SET @tableEntityName = CONCAT('tbl_', LOWER(@entityName));
 		SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
 		SET @fieldForeignKeyParentID = 'fk_ParentID';
 		SET @fieldEntityKey = CONCAT(@entityName, 'Key');
@@ -35,12 +35,12 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		SET @fieldForeignKeyLanguageID = 'fk_LanguageID';
 		SET @fieldTimeStampCreated = 'ts_Created';
 		SET @fieldTimeStampUpdated = 'ts_Updated';
-		SET @tableKindOfEntityName = CONCAT('tbl_kind_of_', @entityName);
+		SET @tableKindOfEntityName = CONCAT('tbl_kind_of_', LOWER(@entityName));
 		SET @fieldPrimaryKeyKindOfEntityID = CONCAT('pk_KindOf', @entityName, 'ID');
 		SET @fieldPrimaryKeyLanguageID = CONCAT('pk_LanguageID');
-		SET @tableLanguage = 'tbl_language';
-		SET @viewEntityName = @entityName;
-		SET @viewKindOfEntityName = CONCAT('kind_of_', @entityName);
+		SET @tableLanguage = LOWER('tbl_language');
+		SET @viewEntityName = LOWER(@entityName);
+		SET @viewKindOfEntityName = CONCAT('kind_of_', LOWER(@entityName));
 		SET @fieldKindOfEntityKey = CONCAT('KindOf', @entityName, 'Key');
 		SET @fieldKindOfEntityValue = CONCAT('KindOf', @entityName, 'Value');
 		-- Set names
@@ -157,7 +157,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 					`' , @fieldForeignKeyLanguageID, '`,
 					`' , @fieldTimeStampCreated, '`,
 					`' , @fieldTimeStampUpdated, '`
-					FROM ' , @tableEntityName, ';
+					FROM ' , LOWER(@tableEntityName), ';
 			');
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
@@ -221,7 +221,7 @@ CALL SP_MAIN(@databaseName, @entityName);
 	SET NAMES utf8;
 	-- Set foreign key checks to off
 	SET FOREIGN_KEY_CHECKS = 0;	
-	SET @tableEntityName = CONCAT('tbl_', @entityName);
+	SET @tableEntityName = CONCAT('tbl_', LOWER(@entityName));
 	SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
 	SET @valueFieldPrimaryKeyEntityID = 1;
 	SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;	
@@ -260,7 +260,7 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(255) CH
         SET @separatorLength = CHAR_LENGTH(@separator);
 		SET @entityName = ENTITY_NAME;
 		SET @databaseName = DATABASE_NAME;
-		SET @tableEntityName = CONCAT('tbl_', @entityName);
+		SET @tableEntityName = CONCAT('tbl_', LOWER(@entityName));
 		SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
 		SET @valueFieldPrimaryKeyEntityID = 1;
 		SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;	
@@ -342,7 +342,7 @@ CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME
 DELIMITER ;
 -- Call stored procedure loop field call create tables and views, 
 -- proving it with the database name, table name, 
-SET @tableName = 'tbl_entity';
+SET @tableName = LOWER('tbl_entity');
 SET @fieldKeyName = 'EntityKey';
 SET @keyValue = 'Entity';
 SET @fieldValueName = 'EntityValue';
@@ -359,15 +359,15 @@ CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES
 		SET @secondEntityName = REPLACE(@linkedEntitiesNames,CONCAT(@firstEntityName, @separator),'');
 		SELECT @firstEntityName AS Message_FirstEntityName;
 		SELECT @secondEntityName AS Message_SecondEntityName;
-		SET @tableLinkedEntitiesNames = CONCAT('tbl_', @firstEntityName, '_',  @secondEntityName);
+		SET @tableLinkedEntitiesNames = CONCAT('tbl_', LOWER(@firstEntityName), '_',  LOWER(@secondEntityName));
 		SET @fieldPrimaryKeyLinkedEntitiesID = CONCAT('pk_', @firstEntityName, @secondEntityName, 'ID');
 		SET @fieldForeignKeyFirstEntityID = CONCAT('fk_', @firstEntityName, 'ID');
 		SET @fieldForeignKeySecondEntityID = CONCAT('fk_', @secondEntityName, 'ID');
 		SET @fieldTimeStampCreated = 'ts_Created';
 		SET @fieldTimeStampUpdated = 'ts_Updated';
-		SET @tableFirstEntityName = CONCAT('tbl_', @firstEntityName);
-		SET @tableSecondEntityName = CONCAT('tbl_', @secondEntityName);
-		SET @viewLinkedEntitiesNames = CONCAT(@firstEntityName, '_', @secondEntityName);
+		SET @tableFirstEntityName = CONCAT('tbl_', LOWER(@firstEntityName));
+		SET @tableSecondEntityName = CONCAT('tbl_', LOWER(@secondEntityName));
+		SET @viewLinkedEntitiesNames = CONCAT(LOWER(@firstEntityName), '_', LOWER(@secondEntityName));
 		SET @fieldPrimaryKeyFirstEntityID = CONCAT('pk_', @firstEntityName, 'ID');
 		SET @fieldPrimaryKeySecondEntityID = CONCAT('pk_', @secondEntityName, 'ID');
 		-- Set names
