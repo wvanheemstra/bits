@@ -1,0 +1,58 @@
+Using Zorba XQuery/JSONiq processor with NodeJS:
+
+For example, to generate a JSON Schema from the bits MySQL relational database for use with MQL
+**********************************************************************
+To install zorba, see here www.zorba.io/download
+
+e.g.
+
+Windows
+Download the 32 bits installer or 64 bits installer that contains all core and optional non-core modules.
+
+Debian
+Linux Debian packages for Zorba and for all external modules are available through a new repository: ppa:juan457/zorba.
+
+For adding this repository to your list of know repositories use:
+
+sudo add-apt-repository ppa:juan457/zorba
+sudo apt-get update
+For installing Zorba use:
+
+sudo apt-get install zorba
+And for installing the external modules use:
+
+sudo apt-get install zorba-${modulename}-module
+MacOS X
+Download the Mac OS X installer.
+
+This installer contains Zorba with most of the external modules package and all their dependency packages based on Macports. Some external modules are not included due to missing MacPorts dependencies: schema-tools, mail and all image/animation modules.
+
+Source Distribution
+For building and installing the source distribution, download the source package and follow our build and installation instructions.
+
+**********************************************************************
+For the NodeJS module
+
+source:
+https://groups.google.com/forum/#!topic/jsoniq/Vf5g4rfG_4U
+
+
+Hello,
+I just created a basic module for node.js so you can use it with Zorba and therefore to use JSONiq,
+to install it, make sure you have Zorba properly installed on your system, the use npm like:
+npm install zorba
+this will enable you the Zorba module within node.js, currently we have only a simple binding, like in this example:
+
+var zorba = require('zorba');
+try {
+  var r = zorba.execute("Hello from Zorba for Node");
+  console.log(r);
+} catch (e) {
+  console.log("error");
+}
+
+soon I will post references in our site, 
+give it a try, 
+if you have problems or suggestions, please! please let us know!
+
+-Rodolfo Ochoa 
