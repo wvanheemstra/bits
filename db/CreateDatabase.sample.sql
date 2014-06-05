@@ -288,7 +288,53 @@ CALL SP_MAIN(@databaseName, @entityName);
 	SET @valueFieldPrimaryKeyEntityID = 2;
 	SET @valueFieldForeignKeyParentID = 1;	
 	SET @valueFieldEntityKey = CONCAT('"', LOWER(@databaseName), '"');
-	SET @valueFieldEntityValue = CONCAT('"schema_name": "', LOWER(@databaseName), '", "types": {}');
+	SET @valueFieldEntityValue = '{}';
+	SET @valueForeignKeyKindOfEntityID = 0;	
+	START TRANSACTION;
+		SET @query = CONCAT("
+			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
+			VALUES(
+			 ",@valueFieldPrimaryKeyEntityID,",
+			 ",@valueFieldForeignKeyParentID,",
+			'",@valueFieldEntityKey,"',
+			'",@valueFieldEntityValue,"',
+			 ",@valueForeignKeyKindOfEntityID,",
+			 ",@valueForeignKeyLanguageID,",
+			'",@valueTimeStampCreated,"',
+			'",@valueTimeStampUpdated,"');
+		");
+		SELECT @query AS Message;
+		PREPARE stmt FROM @query;
+		EXECUTE stmt;
+		DEALLOCATE PREPARE stmt;
+	COMMIT;
+	SET @valueFieldPrimaryKeyEntityID = 3;
+	SET @valueFieldForeignKeyParentID = 2;	
+	SET @valueFieldEntityKey = '"schema_name"';
+	SET @valueFieldEntityValue = CONCAT('"', LOWER(@databaseName), '"');
+	SET @valueForeignKeyKindOfEntityID = 0;	
+	START TRANSACTION;
+		SET @query = CONCAT("
+			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
+			VALUES(
+			 ",@valueFieldPrimaryKeyEntityID,",
+			 ",@valueFieldForeignKeyParentID,",
+			'",@valueFieldEntityKey,"',
+			'",@valueFieldEntityValue,"',
+			 ",@valueForeignKeyKindOfEntityID,",
+			 ",@valueForeignKeyLanguageID,",
+			'",@valueTimeStampCreated,"',
+			'",@valueTimeStampUpdated,"');
+		");
+		SELECT @query AS Message;
+		PREPARE stmt FROM @query;
+		EXECUTE stmt;
+		DEALLOCATE PREPARE stmt;
+	COMMIT;
+	SET @valueFieldPrimaryKeyEntityID = 4;
+	SET @valueFieldForeignKeyParentID = 2;	
+	SET @valueFieldEntityKey = '"types"';
+	SET @valueFieldEntityValue = '{}';
 	SET @valueForeignKeyKindOfEntityID = 0;	
 	START TRANSACTION;
 		SET @query = CONCAT("
