@@ -4,7 +4,7 @@
 --       with a size of maximum 5000 characters
 -- ================ CUSTOM CONFIGURATIONS ======================================
 SET @databaseName = LOWER('bits'); -- 'bits' is mandatory
-SET @databaseSimpleEntities = '"Entity","Language","Individual","Name"'; -- Entity & Language are mandatory
+SET @databaseSimpleEntities = '"Entity","Language","Schema","Individual","Name"'; -- Entity & Language & Schema are mandatory
 SET @databaseComplexEntities = '"Membership","Whereabouts"'; -- Entities with fields other than the default fields, e.g. Membership
 SET @databaseSimpleLinkedEntities = '"Entity-Name","Language-Name","Individual-Name"'; -- e.g. Entity-Name
 SET @databaseComplexLinkedEntities = '';
@@ -13,6 +13,41 @@ SET @databaseLanguage = 'English'; -- 'English' is mandatory
 -- ================ DO NOT CHANGE ANYTHING BELOW THIS LINE =====================
 DROP DATABASE IF EXISTS `bits`;
 CREATE DATABASE IF NOT EXISTS `bits` CHARACTER SET 'utf8' COLLATE 'utf8_bin';
+USE bits; -- from now on all refers to this database
+-- Name: SP_UPDATE_SCHEMA
+-- Description: A stored procedure that updates the schema table,
+-- for creation of a (JSON) Schema from SQL later on
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `SP_UPDATE_SCHEMA`;
+CREATE PROCEDURE `SP_UPDATE_SCHEMA` (
+	IN `SCHEMA_ID` int(11), 
+	IN `PARENT_ID` int(11),  
+	IN `SCHEMA_KEY` varchar(255) CHARACTER SET 'utf8',  
+	IN `SCHEMA_VALUE` varchar(5000) CHARACTER SET 'utf8',  
+	IN `KIND_OF_SCHEMA` varchar(255) CHARACTER SET 'utf8')
+	BEGIN
+	/*
+		-- Set names
+		SET NAMES utf8;
+		-- Set foreign key checks to off
+		SET FOREIGN_KEY_CHECKS = 0;	
+		-- LINKED ENTITIES
+		START TRANSACTION;
+			-- TEMP: placeholder, still to do
+			SET @query = CONCAT('
+				SELECT * FROM DUAL; 
+			');
+			SELECT CONCAT(@query) AS Message;
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+		COMMIT;
+		-- Set foreign key checks to on
+		SET FOREIGN_KEY_CHECKS = 1;	
+	*/
+	END; 
+$$
+DELIMITER ;
 -- Name: sp_CreateTablesAndViews
 -- Description: A stored procedure that creates tables and views
 -- Parameters:
@@ -21,7 +56,6 @@ CREATE DATABASE IF NOT EXISTS `bits` CHARACTER SET 'utf8' COLLATE 'utf8_bin';
 -- CALL SP_CREATE_TABLES_AND_VIEWS(Foo);
 -- where Foo is the entity name 
 DELIMITER $$
-USE bits; -- from now on all refers to this database
 DROP PROCEDURE IF EXISTS `SP_CREATE_TABLES_AND_VIEWS`;
 CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
 	BEGIN
@@ -174,9 +208,10 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHA
 		COMMIT;
 		-- Set foreign key checks to on
 		SET FOREIGN_KEY_CHECKS = 1;	
-	END; $$
+	END; 
+$$
 DELIMITER ;
--- Name: sp_Main
+-- Name: SP_MAIN
 -- Description: A stored procedure that contains the main procedures, 
 -- run this first after having created the empty database and required stored procedures
 -- Parameters:
@@ -212,9 +247,47 @@ CREATE PROCEDURE `SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8'
 		
 		-- TO DO
 	
-	END; $$
+	END; 
+$$
 DELIMITER ;	
--- Call stored procedure main, proving it with the database name and entity name
+-- Call stored procedure main, providing it with the database name and entity name
+SET @entityName = 'Schema';
+CALL SP_MAIN(@databaseName, @entityName);
+	-- Set names
+	SET NAMES utf8;
+	-- Set foreign key checks to off
+	SET FOREIGN_KEY_CHECKS = 0;	
+	SET @tableEntityName = CONCAT('tbl_', LOWER(@entityName));
+	SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
+	SET @valueFieldPrimaryKeyEntityID = 1;
+	SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;	
+	SET @valueFieldEntityKey = LOWER(@databaseName);
+	SET @valueFieldEntityValue = CONCAT('"schema_name": "', LOWER(@databaseName), '", "types": {}');
+	SET @valueForeignKeyKindOfEntityID = 0;
+	SET @valueForeignKeyLanguageID = 1;
+	SET @valueTimeStampCreated = CAST('0000-00-00 00:00:00' AS DATETIME);
+	SET @valueTimeStampUpdated = CAST('0000-00-00 00:00:00' AS DATETIME);
+	START TRANSACTION;
+		SET @query = CONCAT("
+			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
+			VALUES(
+			 ",@valueFieldPrimaryKeyEntityID,",
+			 ",@valueFieldForeignKeyParentID,",
+			'",@valueFieldEntityKey,"',
+			'",@valueFieldEntityValue,"',
+			 ",@valueForeignKeyKindOfEntityID,",
+			 ",@valueForeignKeyLanguageID,",
+			'",@valueTimeStampCreated,"',
+			'",@valueTimeStampUpdated,"');
+		");
+		SELECT @query AS Message;
+		PREPARE stmt FROM @query;
+		EXECUTE stmt;
+		DEALLOCATE PREPARE stmt;
+	COMMIT;	
+	-- Set foreign key checks to on
+	SET FOREIGN_KEY_CHECKS = 1;
+-- Call stored procedure main, providing it with the database name and entity name
 SET @entityName = 'Language';
 CALL SP_MAIN(@databaseName, @entityName);
 	-- Set names
@@ -298,7 +371,8 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(255) CH
 			SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;
 		END WHILE;
 		SET FOREIGN_KEY_CHECKS = 1;
-	END; $$
+	END; 
+$$
 DELIMITER ;
 -- Call stored procedure main, proving it with the database name and entity name	
 SET @entityName = 'Entity';
@@ -338,7 +412,8 @@ CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME
 			END CASE;
 		END LOOP getFieldValue;
 		CLOSE fieldValueCursor;
-	END; $$
+	END; 
+$$
 DELIMITER ;
 -- Call stored procedure loop field call create tables and views, 
 -- proving it with the database name, table name, 
@@ -426,7 +501,8 @@ CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES
 		COMMIT;
 		-- Set foreign key checks to on
 		SET FOREIGN_KEY_CHECKS = 1;	
-	END; $$
+	END; 
+$$
 DELIMITER ;
 -- Create the split string function
 DELIMITER $$
@@ -437,7 +513,8 @@ CREATE FUNCTION `FN_SPLIT_STRING` (str VARCHAR(5000), delim VARCHAR(12), pos INT
 		RETURN REPLACE(SUBSTRING(SUBSTRING_INDEX(str, delim, pos),
 		LENGTH(SUBSTRING_INDEX(str, delim, pos -1)) + 1),
 		delim, '');
-	END; $$
+	END; 
+$$
 DELIMITER ;
 -- Create procedure create multiple linked entities tables, for each entry in @databaseSimpleLinkedEntities
 DELIMITER $$
@@ -459,10 +536,47 @@ CREATE PROCEDURE `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `MULTIP
 				SET @counter = @counter + 1;
 			END IF;
 		END WHILE;
-	END; $$
+	END; 
+$$
 DELIMITER ;
 -- Call procedure create multiple linked entities tables, for complete @databaseSimpleLinkedEntities and @databaseSimpleLinkedEntitiesSeparator
 SET @multipleLinkedEntitiesNames = @databaseSimpleLinkedEntities;
 SET @linkedEntitiesNamesSeparator = @databaseSimpleLinkedEntitiesSeparator;
 CALL SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS(@multipleLinkedEntitiesNames, @linkedEntitiesNamesSeparator);
-
+-- THIS MAY NEED TO BE BETTER INTEGRATED IN ABOVE CODE
+-- UPDATING SCHEMA TABLE FOR CREATING JSON FROM SQL
+-- Following http://technology.amis.nl/2011/06/14/creating-json-document-straight-from-sql-query-using-listagg-and-with-clause/
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `SP_CREATE_SCHEMA`;
+CREATE PROCEDURE `SP_UPDATE_SCHEMA` (IN `SCHEMA_ID` int(11), IN `PARENT_ID` int(11),  IN `SCHEMA_KEY` varchar(255) CHARACTER SET 'utf8',  IN `SCHEMA_VALUE` varchar(5000) CHARACTER SET 'utf8',  IN `KIND_OF_SCHEMA` varchar(255) CHARACTER SET 'utf8')
+	BEGIN
+		-- Set names
+		SET NAMES utf8;
+		-- Set foreign key checks to off
+		SET FOREIGN_KEY_CHECKS = 0;	
+		-- LINKED ENTITIES
+		START TRANSACTION;
+			SET @query = CONCAT('
+			
+		--	CREATE TEMPORARY TABLE res_schema(pk_SchemaID int(11), fk_ParentID int(11), SchemaKey varchar(255), SchemaValue varchar(5000))engine=memory;
+			
+			
+		--			WITH `EntityKey` AS
+		--			(  SELECT * 
+		--			   FROM `tbl_entity`	
+		--			)
+		--			SELECT \'{"company" :[\'
+		--			||(SELECT * FROM DUAL)
+		--			||\']}\'
+		--			FROM DUAL;
+			');
+			SELECT CONCAT(@query) AS Message;
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+		COMMIT;
+		-- Set foreign key checks to on
+		SET FOREIGN_KEY_CHECKS = 1;		
+	END; 
+$$
+DELIMITER ;
