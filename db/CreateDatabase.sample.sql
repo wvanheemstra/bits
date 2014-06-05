@@ -261,8 +261,8 @@ CALL SP_MAIN(@databaseName, @entityName);
 	SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
 	SET @valueFieldPrimaryKeyEntityID = 1;
 	SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;	
-	SET @valueFieldEntityKey = LOWER(@databaseName);
-	SET @valueFieldEntityValue = CONCAT('"schema_name": "', LOWER(@databaseName), '", "types": {}');
+	SET @valueFieldEntityKey = '"domains"';
+	SET @valueFieldEntityValue = '{}';
 	SET @valueForeignKeyKindOfEntityID = 0;
 	SET @valueForeignKeyLanguageID = 1;
 	SET @valueTimeStampCreated = CAST('0000-00-00 00:00:00' AS DATETIME);
@@ -285,6 +285,29 @@ CALL SP_MAIN(@databaseName, @entityName);
 		EXECUTE stmt;
 		DEALLOCATE PREPARE stmt;
 	COMMIT;	
+	SET @valueFieldPrimaryKeyEntityID = 2;
+	SET @valueFieldForeignKeyParentID = 1;	
+	SET @valueFieldEntityKey = CONCAT('"', LOWER(@databaseName), '"');
+	SET @valueFieldEntityValue = CONCAT('"schema_name": "', LOWER(@databaseName), '", "types": {}');
+	SET @valueForeignKeyKindOfEntityID = 0;	
+	START TRANSACTION;
+		SET @query = CONCAT("
+			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
+			VALUES(
+			 ",@valueFieldPrimaryKeyEntityID,",
+			 ",@valueFieldForeignKeyParentID,",
+			'",@valueFieldEntityKey,"',
+			'",@valueFieldEntityValue,"',
+			 ",@valueForeignKeyKindOfEntityID,",
+			 ",@valueForeignKeyLanguageID,",
+			'",@valueTimeStampCreated,"',
+			'",@valueTimeStampUpdated,"');
+		");
+		SELECT @query AS Message;
+		PREPARE stmt FROM @query;
+		EXECUTE stmt;
+		DEALLOCATE PREPARE stmt;
+	COMMIT;		
 	-- Set foreign key checks to on
 	SET FOREIGN_KEY_CHECKS = 1;
 -- Call stored procedure main, providing it with the database name and entity name
@@ -404,6 +427,8 @@ CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME
 			SELECT CONCAT('Found: ', fieldValue) AS Message_FieldValue;
 			SET @entityName = fieldValue;
 			CASE  
+				WHEN @entityName = 'Schema' THEN
+					SELECT CONCAT('Skipping: ', @entityName) AS Message; 			
 				WHEN @entityName = 'Entity' THEN     
 					SELECT CONCAT('Skipping: ', @entityName) AS Message;
 				WHEN @entityName = 'Language' THEN
