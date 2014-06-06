@@ -20,11 +20,12 @@ USE bits; -- from now on all refers to this database
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_UPDATE_SCHEMA`;
 CREATE PROCEDURE `SP_UPDATE_SCHEMA` (
-	IN `SCHEMA_ID` int(11), 
-	IN `PARENT_ID` int(11),  
-	IN `SCHEMA_KEY` varchar(255) CHARACTER SET 'utf8',  
-	IN `SCHEMA_VALUE` varchar(5000) CHARACTER SET 'utf8',  
-	IN `KIND_OF_SCHEMA` varchar(255) CHARACTER SET 'utf8')
+		IN `SCHEMA_ID` int(11), 
+		IN `PARENT_ID` int(11),  
+		IN `SCHEMA_KEY` varchar(255) CHARACTER SET 'utf8',  
+		IN `SCHEMA_VALUE` varchar(5000) CHARACTER SET 'utf8',  
+		IN `KIND_OF_SCHEMA` varchar(255) CHARACTER SET 'utf8'
+	)
 	BEGIN
 	/*
 		-- Set names
@@ -57,7 +58,9 @@ DELIMITER ;
 -- where Foo is the entity name 
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_CREATE_TABLES_AND_VIEWS`;
-CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
+CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
+		IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8'
+	)
 	BEGIN
 		SET @entityName = ENTITY_NAME;
 		SET @tableEntityName = CONCAT('tbl_', LOWER(@entityName));
@@ -222,7 +225,10 @@ DELIMITER ;
 -- and Bar is the entity name 
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_MAIN`;
-CREATE PROCEDURE `SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8')
+CREATE PROCEDURE `SP_MAIN` (
+		IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8'
+	)
 	BEGIN
 	    SET @entityName = ENTITY_NAME;
 		-- Create the table that will contain all entities, for which individual tables will be created later on
@@ -250,107 +256,97 @@ CREATE PROCEDURE `SP_MAIN` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8'
 	END; 
 $$
 DELIMITER ;	
+-- Create procedure insert into table
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `SP_INSERT_INTO_TABLE`;
+CREATE PROCEDURE `SP_INSERT_INTO_TABLE` (
+		IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `PRIMARY_KEY_ENTITY_ID` int(11),
+		IN `FOREIGN_KEY_PARENT_ID` int(11),
+		IN `ENTITY_KEY` varchar(255) CHARACTER SET 'utf8', 
+		IN `ENTITY_VALUE` varchar(5000) CHARACTER SET 'utf8'
+	)
+	BEGIN
+		-- Set names
+		SET NAMES utf8;
+		-- Set foreign key checks to off
+		SET FOREIGN_KEY_CHECKS = 0;	
+		SET @tableEntityName = CONCAT('tbl_', LOWER(@entityName));
+		SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
+		SET @valueFieldPrimaryKeyEntityID = PRIMARY_KEY_ENTITY_ID;
+		SET @valueFieldForeignKeyParentID = FOREIGN_KEY_PARENT_ID;	
+		SET @valueFieldEntityKey = ENTITY_KEY; -- e.g. "domains"
+		SET @valueFieldEntityValue = ENTITY_VALUE; -- e.g. {}
+		SET @valueForeignKeyKindOfEntityID = 0;
+		SET @valueForeignKeyLanguageID = 1;
+		SET @valueTimeStampCreated = CAST('0000-00-00 00:00:00' AS DATETIME);
+		SET @valueTimeStampUpdated = CAST('0000-00-00 00:00:00' AS DATETIME);
+		START TRANSACTION;
+			SET @query = CONCAT("
+				INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
+				VALUES(
+				 ",@valueFieldPrimaryKeyEntityID,",
+				 ",@valueFieldForeignKeyParentID,",
+				'",@valueFieldEntityKey,"',
+				'",@valueFieldEntityValue,"',
+				 ",@valueForeignKeyKindOfEntityID,",
+				 ",@valueForeignKeyLanguageID,",
+				'",@valueTimeStampCreated,"',
+				'",@valueTimeStampUpdated,"');
+			");
+			SELECT @query AS Message;
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+		COMMIT;
+	END; 
+$$
+DELIMITER ;
 -- Call stored procedure main, providing it with the database name and entity name
 SET @entityName = 'Schema';
 CALL SP_MAIN(@databaseName, @entityName);
-	-- Set names
-	SET NAMES utf8;
-	-- Set foreign key checks to off
-	SET FOREIGN_KEY_CHECKS = 0;	
-	SET @tableEntityName = CONCAT('tbl_', LOWER(@entityName));
-	SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
-	SET @valueFieldPrimaryKeyEntityID = 1;
-	SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;	
-	SET @valueFieldEntityKey = '"domains"';
-	SET @valueFieldEntityValue = '{}';
-	SET @valueForeignKeyKindOfEntityID = 0;
-	SET @valueForeignKeyLanguageID = 1;
-	SET @valueTimeStampCreated = CAST('0000-00-00 00:00:00' AS DATETIME);
-	SET @valueTimeStampUpdated = CAST('0000-00-00 00:00:00' AS DATETIME);
-	START TRANSACTION;
-		SET @query = CONCAT("
-			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
-			VALUES(
-			 ",@valueFieldPrimaryKeyEntityID,",
-			 ",@valueFieldForeignKeyParentID,",
-			'",@valueFieldEntityKey,"',
-			'",@valueFieldEntityValue,"',
-			 ",@valueForeignKeyKindOfEntityID,",
-			 ",@valueForeignKeyLanguageID,",
-			'",@valueTimeStampCreated,"',
-			'",@valueTimeStampUpdated,"');
-		");
-		SELECT @query AS Message;
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;
-	COMMIT;	
-	SET @valueFieldPrimaryKeyEntityID = 2;
-	SET @valueFieldForeignKeyParentID = 1;	
-	SET @valueFieldEntityKey = CONCAT('"', LOWER(@databaseName), '"');
-	SET @valueFieldEntityValue = CONCAT('"schema_name": "', LOWER(@databaseName), '", "types": {}');
-	SET @valueForeignKeyKindOfEntityID = 0;	
-	START TRANSACTION;
-		SET @query = CONCAT("
-			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
-			VALUES(
-			 ",@valueFieldPrimaryKeyEntityID,",
-			 ",@valueFieldForeignKeyParentID,",
-			'",@valueFieldEntityKey,"',
-			'",@valueFieldEntityValue,"',
-			 ",@valueForeignKeyKindOfEntityID,",
-			 ",@valueForeignKeyLanguageID,",
-			'",@valueTimeStampCreated,"',
-			'",@valueTimeStampUpdated,"');
-		");
-		SELECT @query AS Message;
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;
-	COMMIT;		
-	-- Set foreign key checks to on
-	SET FOREIGN_KEY_CHECKS = 1;
+-- Call stored procedure insert into table for: domains
+SET @entityName = 'Schema';
+Set @primaryKeyEntityID = 1;
+Set @foreignKeyParentID = @primaryKeyEntityID; -- links to itself
+SET @entityKey = '"domains"';
+SET @entityValue = '{}';
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+-- Call stored procedure insert into table for: schema name
+SET @entityName = 'Schema';
+Set @primaryKeyEntityID = 2;
+Set @foreignKeyParentID = 1; -- links to domains
+SET @entityKey = CONCAT('"', LOWER(@databaseName), '"');
+SET @entityValue = CONCAT('"schema_name": "', LOWER(@databaseName), '"');
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+-- Call stored procedure insert into table for: types
+SET @entityName = 'Schema';
+Set @primaryKeyEntityID = 3;
+Set @foreignKeyParentID = 1; -- links to domains
+SET @entityKey = "types";
+SET @entityValue = '{}';
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
 -- Call stored procedure main, providing it with the database name and entity name
 SET @entityName = 'Language';
 CALL SP_MAIN(@databaseName, @entityName);
-	-- Set names
-	SET NAMES utf8;
-	-- Set foreign key checks to off
-	SET FOREIGN_KEY_CHECKS = 0;	
-	SET @tableEntityName = CONCAT('tbl_', LOWER(@entityName));
-	SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
-	SET @valueFieldPrimaryKeyEntityID = 1;
-	SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;	
-	SET @valueFieldEntityKey = 'Language';
-	SET @valueFieldEntityValue = @databaseLanguage;
-	SET @valueForeignKeyKindOfEntityID = 0;
-	SET @valueForeignKeyLanguageID = 1;
-	SET @valueTimeStampCreated = CAST('0000-00-00 00:00:00' AS DATETIME);
-	SET @valueTimeStampUpdated = CAST('0000-00-00 00:00:00' AS DATETIME);
-	START TRANSACTION;
-		SET @query = CONCAT("
-			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
-			VALUES(
-			 ",@valueFieldPrimaryKeyEntityID,",
-			 ",@valueFieldForeignKeyParentID,",
-			'",@valueFieldEntityKey,"',
-			'",@valueFieldEntityValue,"',
-			 ",@valueForeignKeyKindOfEntityID,",
-			 ",@valueForeignKeyLanguageID,",
-			'",@valueTimeStampCreated,"',
-			'",@valueTimeStampUpdated,"');
-		");
-		SELECT @query AS Message;
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;
-	COMMIT;	
-	-- Set foreign key checks to on
-	SET FOREIGN_KEY_CHECKS = 1;
+-- Call stored procedure insert into table for: english
+SET @entityName = 'Language';
+Set @primaryKeyEntityID = 1;
+Set @foreignKeyParentID = 1; -- links to itself
+SET @entityKey = 'Language';
+SET @entityValue = @databaseLanguage;
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
 -- Create stored procedure that inserts an array of values
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_INSERT_ARRAY_OF_VALUES`;
-CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_KEY` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_VALUE_ARRAY` varchar(255) CHARACTER SET 'utf8', IN `VALUE_FIELD_ENTITY_VALUE_ARRAY_SEPARATOR` varchar(1) CHARACTER SET 'utf8')
+CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (
+		IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `VALUE_FIELD_ENTITY_KEY` varchar(255) CHARACTER SET 'utf8', 
+		IN `VALUE_FIELD_ENTITY_VALUE_ARRAY` varchar(255) CHARACTER SET 'utf8', 
+		IN `VALUE_FIELD_ENTITY_VALUE_ARRAY_SEPARATOR` varchar(1) CHARACTER SET 'utf8'
+	)
 	BEGIN
 		SET @separator = VALUE_FIELD_ENTITY_VALUE_ARRAY_SEPARATOR;
         SET @separatorLength = CHAR_LENGTH(@separator);
@@ -408,7 +404,13 @@ CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@databaseName, @entityName, @valueFieldEnt
 -- Create a stored procedure that creates tables based on the entity names stored in tbl_entity.EntityValue
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS`;
-CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', IN `TABLE_NAME` varchar(255) CHARACTER SET 'utf8', IN `FIELD_KEY_NAME` varchar(255) CHARACTER SET 'utf8', IN `KEY_VALUE` varchar(255) CHARACTER SET 'utf8', IN `FIELD_VALUE_NAME` varchar(255) CHARACTER SET 'utf8')
+CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (
+		IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `TABLE_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `FIELD_KEY_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `KEY_VALUE` varchar(255) CHARACTER SET 'utf8', 
+		IN `FIELD_VALUE_NAME` varchar(255) CHARACTER SET 'utf8'
+	)
 	BEGIN
 		DECLARE findFinished INTEGER DEFAULT 0;
 		DECLARE fieldValue varchar(5000) DEFAULT "";
@@ -451,7 +453,10 @@ CALL SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS(@databaseName, @tableName, @fiel
 -- Create procedure create link tables
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS`;
-CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `LINKED_ENTITIES_NAMES` varchar(255) CHARACTER SET 'utf8', IN `LINKED_ENTITIES_NAMES_SEPARATOR` varchar(255) CHARACTER SET 'utf8')
+CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (
+		IN `LINKED_ENTITIES_NAMES` varchar(255) CHARACTER SET 'utf8', 
+		IN `LINKED_ENTITIES_NAMES_SEPARATOR` varchar(255) CHARACTER SET 'utf8'
+	)
 	BEGIN
 		SET @linkedEntitiesNames = LINKED_ENTITIES_NAMES;
 		SET @separator = LINKED_ENTITIES_NAMES_SEPARATOR;
@@ -532,7 +537,11 @@ DELIMITER ;
 -- Create the split string function
 DELIMITER $$
 DROP FUNCTION IF EXISTS `FN_SPLIT_STRING`;
-CREATE FUNCTION `FN_SPLIT_STRING` (str VARCHAR(5000), delim VARCHAR(12), pos INT)
+CREATE FUNCTION `FN_SPLIT_STRING` (
+		str VARCHAR(5000), 
+		delim VARCHAR(12), 
+		pos INT
+	)
 	RETURNS VARCHAR(255)
 	BEGIN
 		RETURN REPLACE(SUBSTRING(SUBSTRING_INDEX(str, delim, pos),
@@ -544,7 +553,10 @@ DELIMITER ;
 -- Create procedure create multiple linked entities tables, for each entry in @databaseSimpleLinkedEntities
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS`;
-CREATE PROCEDURE `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS` (IN `MULTIPLE_LINKED_ENTITIES_NAMES` varchar(5000) CHARACTER SET 'utf8', IN `LINKED_ENTITIES_NAMES_SEPARATOR` varchar(255) CHARACTER SET 'utf8')
+CREATE PROCEDURE `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS` (
+		IN `MULTIPLE_LINKED_ENTITIES_NAMES` varchar(5000) CHARACTER SET 'utf8', 
+		IN `LINKED_ENTITIES_NAMES_SEPARATOR` varchar(255) CHARACTER SET 'utf8'
+	)
 	BEGIN
 		SET @multipleLinkedEntitiesNames = MULTIPLE_LINKED_ENTITIES_NAMES;
 		SET @linkedEntitiesNamesSeparator = LINKED_ENTITIES_NAMES_SEPARATOR;
@@ -573,7 +585,13 @@ CALL SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS(@multipleLinkedEntitiesNa
 -- Following http://technology.amis.nl/2011/06/14/creating-json-document-straight-from-sql-query-using-listagg-and-with-clause/
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_UPDATE_SCHEMA`;
-CREATE PROCEDURE `SP_UPDATE_SCHEMA` (IN `SCHEMA_ID` int(11), IN `PARENT_ID` int(11),  IN `SCHEMA_KEY` varchar(255) CHARACTER SET 'utf8',  IN `SCHEMA_VALUE` varchar(5000) CHARACTER SET 'utf8',  IN `KIND_OF_SCHEMA` varchar(255) CHARACTER SET 'utf8')
+CREATE PROCEDURE `SP_UPDATE_SCHEMA` (
+		IN `SCHEMA_ID` int(11), 
+		IN `PARENT_ID` int(11),  
+		IN `SCHEMA_KEY` varchar(255) CHARACTER SET 'utf8',  
+		IN `SCHEMA_VALUE` varchar(5000) CHARACTER SET 'utf8',  
+		IN `KIND_OF_SCHEMA` varchar(255) CHARACTER SET 'utf8'
+	)
 	BEGIN
 		-- Set names
 		SET NAMES utf8;
@@ -609,7 +627,9 @@ DELIMITER ;
 -- using parent-child relationship querying
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_OUTPUT_SCHEMA`;
-CREATE PROCEDURE `SP_OUTPUT_SCHEMA` (IN `SCHEMA_ID` int(11))
+CREATE PROCEDURE `SP_OUTPUT_SCHEMA` (
+		IN `SCHEMA_ID` int(11)
+	)
 	BEGIN
 		SET @childID = SCHEMA_ID;
 		-- Set names
