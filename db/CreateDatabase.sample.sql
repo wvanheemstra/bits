@@ -288,53 +288,7 @@ CALL SP_MAIN(@databaseName, @entityName);
 	SET @valueFieldPrimaryKeyEntityID = 2;
 	SET @valueFieldForeignKeyParentID = 1;	
 	SET @valueFieldEntityKey = CONCAT('"', LOWER(@databaseName), '"');
-	SET @valueFieldEntityValue = '{}';
-	SET @valueForeignKeyKindOfEntityID = 0;	
-	START TRANSACTION;
-		SET @query = CONCAT("
-			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
-			VALUES(
-			 ",@valueFieldPrimaryKeyEntityID,",
-			 ",@valueFieldForeignKeyParentID,",
-			'",@valueFieldEntityKey,"',
-			'",@valueFieldEntityValue,"',
-			 ",@valueForeignKeyKindOfEntityID,",
-			 ",@valueForeignKeyLanguageID,",
-			'",@valueTimeStampCreated,"',
-			'",@valueTimeStampUpdated,"');
-		");
-		SELECT @query AS Message;
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;
-	COMMIT;
-	SET @valueFieldPrimaryKeyEntityID = 3;
-	SET @valueFieldForeignKeyParentID = 2;	
-	SET @valueFieldEntityKey = '"schema_name"';
-	SET @valueFieldEntityValue = CONCAT('"', LOWER(@databaseName), '"');
-	SET @valueForeignKeyKindOfEntityID = 0;	
-	START TRANSACTION;
-		SET @query = CONCAT("
-			INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
-			VALUES(
-			 ",@valueFieldPrimaryKeyEntityID,",
-			 ",@valueFieldForeignKeyParentID,",
-			'",@valueFieldEntityKey,"',
-			'",@valueFieldEntityValue,"',
-			 ",@valueForeignKeyKindOfEntityID,",
-			 ",@valueForeignKeyLanguageID,",
-			'",@valueTimeStampCreated,"',
-			'",@valueTimeStampUpdated,"');
-		");
-		SELECT @query AS Message;
-		PREPARE stmt FROM @query;
-		EXECUTE stmt;
-		DEALLOCATE PREPARE stmt;
-	COMMIT;
-	SET @valueFieldPrimaryKeyEntityID = 4;
-	SET @valueFieldForeignKeyParentID = 2;	
-	SET @valueFieldEntityKey = '"types"';
-	SET @valueFieldEntityValue = '{}';
+	SET @valueFieldEntityValue = CONCAT('"schema_name": "', LOWER(@databaseName), '", "types": {}');
 	SET @valueForeignKeyKindOfEntityID = 0;	
 	START TRANSACTION;
 		SET @query = CONCAT("
@@ -651,3 +605,38 @@ CREATE PROCEDURE `SP_UPDATE_SCHEMA` (IN `SCHEMA_ID` int(11), IN `PARENT_ID` int(
 	END; 
 $$
 DELIMITER ;
+-- Create procedure output (e.g. JSON) schema, that outputs a schema (in e.g. JSON) from the schema table
+-- using parent-child relationship querying
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `SP_OUTPUT_SCHEMA`;
+CREATE PROCEDURE `SP_OUTPUT_SCHEMA` (IN `SCHEMA_ID` int(11))
+	BEGIN
+		SET @childID = SCHEMA_ID;
+		-- Set names
+		SET NAMES utf8;
+		-- Set foreign key checks to off
+		SET FOREIGN_KEY_CHECKS = 0;	
+		-- LINKED ENTITIES
+		START TRANSACTION;
+			-- child field is pk_SchemaID
+			-- parent field is fk_ParentID
+			-- query will get all siblings to child with @childID
+			SET @query = CONCAT('
+				SELECT parent.pk_SchemaID, parent.SchemaKey, parent.SchemaValue
+				FROM `tbl_schema` child
+				INNER JOIN `tbl_schema` p ON child.fk_ParentID = parent.fk_ParentID
+				WHERE child.pk_SchemaID = ', @childID, '
+				AND parent.pk_SchemaID <> ', @childID
+			);
+			SELECT CONCAT(@query) AS Message;
+			PREPARE stmt FROM @query;
+			EXECUTE stmt;
+			DEALLOCATE PREPARE stmt;
+		COMMIT;
+		-- Set foreign key checks to on
+		SET FOREIGN_KEY_CHECKS = 1;		
+	END; 
+$$
+DELIMITER ;
+-- Call the output schema stored procedure
+CALL SP_OUTPUT_SCHEMA(1);
