@@ -49,6 +49,43 @@ CREATE PROCEDURE `SP_UPDATE_SCHEMA` (
 	END; 
 $$
 DELIMITER ;
+-- Create stored procedure that gets and returns a required field value
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `SP_GET_FIELD_VALUE`;
+CREATE PROCEDURE `SP_GET_FIELD_VALUE` (
+		IN `TABLE_ENTITY_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `REQUIRED_FIELD_NAME` varchar(255) CHARACTER SET 'utf8',
+		INOUT `REQUIRED_FIELD_VALUE` varchar(255) CHARACTER SET 'utf8',
+		IN `WHERE_FIELD_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `WHERE_OPERATOR` varchar(255) CHARACTER SET 'utf8', 
+		IN `WHERE_VALUE` varchar(255) CHARACTER SET 'utf8'
+	)
+	BEGIN
+		START TRANSACTION;
+			SET @tableEntityName = TABLE_ENTITY_NAME;
+			SET @requiredFieldName = REQUIRED_FIELD_NAME;
+			SET @requiredFieldValue = REQUIRED_FIELD_VALUE;
+			SET @whereFieldName = WHERE_FIELD_NAME;
+			SET @whereOperator = WHERE_OPERATOR;
+			SET @whereValue = WHERE_VALUE;	
+
+	/*
+			SELECT CONCAT('Getting field value for: ', @requiredFieldName) AS SP_GET_FIELD_VALUE;
+			-- Select required field		
+			SET @query = CONCAT('
+				SELECT `' , @requiredFieldName, '` FROM `', @tableEntityName, '` WHERE `', @whereFieldName, '` ', @whereOperator, @whereValue
+			);
+			SELECT @query AS SP_GET_FIELD_VALUE;
+			PREPARE stmt FROM @query;
+			EXECUTE stmt INTO REQUIRED_FIELD_VALUE; -- does this work??
+			SELECT REQUIRED_FIELD_VALUE AS SP_GET_FIELD_VALUE; -- for test only
+			DEALLOCATE PREPARE stmt;
+	*/		
+			
+		COMMIT;
+	END; 
+$$
+DELIMITER ;
 -- Name: sp_CreateTablesAndViews
 -- Description: A stored procedure that creates tables and views
 -- Parameters:
@@ -155,11 +192,41 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
 			SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id
 			SET @entityName = 'Schema';
-			Set @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
-			Set @valueFieldForeignKeyParentID = @schemaTypesID; -- links to types
+			-- entity
+			SET @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
+			SET @valueFieldForeignKeyParentID = @schemaTypesID; -- links to types
 			SET @entityKey = CONCAT('"', @viewKindOfEntityName, '"');
 			SET @entityValue = '{}';
 			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
+			-- entity items
+			SET @tableEntityName = 'tbl_Schema';
+			SET @requiredFieldName = 'pk_SchemaID';
+			SET @requiredFieldValue = null;			
+			SET @whereFieldName = 'SchemaKey';
+			SET @whereOperator = '=';
+			SET @whereValue = @entityKey;
+			-- TILL HERE IT WORKS		
+			
+			CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue);
+			
+	/*		
+			
+			SET @schemaEntityID = @requiredFieldValue;
+			-- properties
+			SET @valueFieldForeignKeyParentID = schemaEntityID; -- links to entity			
+			SET @entityKey = '"properties"';
+			SET @entityValue = '{}';
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
+			
+			
+			-- table name
+			
+			
+			-- keys
+			
+	*/		
+			
+			
 			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
 			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
 			SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id			
