@@ -153,6 +153,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SELECT CONCAT('Entity for Schema: Kind of ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;
 			SET @entityNameTEMP = @entityName; -- safe original value for entity name
 			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
+			SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id
 			SET @entityName = 'Schema';
 			Set @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
 			Set @valueFieldForeignKeyParentID = @schemaTypesID; -- links to types
@@ -161,6 +162,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
 			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
+			SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id			
 		END IF;
 		START TRANSACTION;
 			-- Alter kind of entity table to add indices
@@ -239,7 +241,8 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			-- Call stored procedure insert into table schema for type: entity
 			SELECT CONCAT('Entity for Schema: ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;		
 			SET @entityNameTEMP = @entityName; -- safe original value for entity name
-			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name			
+			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
+			SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id			
 			SET @entityName = 'Schema';
 			Set @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
 			Set @valueFieldForeignKeyParentID = @schemaTypesID; -- links to types
@@ -247,7 +250,8 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @entityValue = '{}';
 			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
-			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name			
+			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name	
+			SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id
 		END IF;
 		START TRANSACTION;
 			-- Alter entity table to add indices
@@ -282,6 +286,7 @@ CREATE PROCEDURE `SP_MAIN` (
 	    SET @entityName = ENTITY_NAME;
 		-- Create the table that will contain all entities, for which individual tables will be created later on
 		CALL `bits`.SP_CREATE_TABLES_AND_VIEWS(@entityName);
+
 		-- Insert all entities
 		
 /* 		SET @myArrayOfValue = '2,5,2,23,6,';
@@ -426,36 +431,7 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (
 			SET @valueFieldEntityValue = SUBSTRING_INDEX(@valueFieldEntityValueArray, @separator, 1);
 			SET @valueFieldEntityValue = REPLACE(@valueFieldEntityValue,'"',''); -- removes double quotes
 			SET @valueFieldEntityValueArray = SUBSTRING(@valueFieldEntityValueArray, LOCATE(@separator,@valueFieldEntityValueArray) + 1);
-		
-		/*
-			THIS CALL 
-		*/
 			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @valueFieldEntityKey, @valueFieldEntityValue);
-		/*
-			REPLACES BELOW QUERY
-		*/
-			
-		/*
-			START TRANSACTION;
-				SET @query = CONCAT("
-					INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
-					VALUES(
-					 ",@valueFieldPrimaryKeyEntityID,",
-					 ",@valueFieldForeignKeyParentID,",
-					'",@valueFieldEntityKey,"',
-					'",@valueFieldEntityValue,"',
-					 ",@valueForeignKeyKindOfEntityID,",
-					 ",@valueForeignKeyLanguageID,",
-					'",@valueTimeStampCreated,"',
-					'",@valueTimeStampUpdated,"');
-				");
-				SELECT @query AS SP_INSERT_ARRAY_OF_VALUES;
-				PREPARE stmt FROM @query;
-				EXECUTE stmt;
-				DEALLOCATE PREPARE stmt;
-			COMMIT;
-		*/	
-			
 			SET @valueFieldPrimaryKeyEntityID = @valueFieldPrimaryKeyEntityID + 1;
 			SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;
 		END WHILE;
@@ -463,14 +439,14 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (
 	END; 
 $$
 DELIMITER ;
--- Call stored procedure main, proving it with the database name and entity name	
+-- Call stored procedure main, providing it with the database name and entity name	
 SET @entityName = 'Entity';
 CALL SP_MAIN(@databaseName, @entityName);
 -- Set values for entity table, then call stored procedure insert array of values, providing it with the key and array of values
 SET @valueFieldEntityKey = 'Entity';
 SET @valueFieldEntityValueArray = @databaseSimpleEntities;
 SET @valueFieldEntityValueArraySeparator = ',';
-CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@databaseName, @entityName, @valueFieldEntityKey, @valueFieldEntityValueArray, @valueFieldEntityValueArraySeparator);
+CALL `bits`.SP_INSERT_ARRAY_OF_VALUES(@databaseName, @entityName, @valueFieldEntityKey, @valueFieldEntityValueArray, @valueFieldEntityValueArraySeparator);			
 -- Create a stored procedure that creates tables based on the entity names stored in tbl_entity.EntityValue
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS`;
@@ -512,8 +488,7 @@ CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (
 	END; 
 $$
 DELIMITER ;
--- Call stored procedure loop field call create tables and views, 
--- proving it with the database name, table name, 
+-- Call stored procedure loop field call create tables and views
 SET @tableName = LOWER('tbl_entity');
 SET @fieldKeyName = 'EntityKey';
 SET @keyValue = 'Entity';
