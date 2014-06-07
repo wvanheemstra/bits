@@ -110,8 +110,6 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		SET @entityNameTEMP = @entityName; -- safe original value for entity name
 		SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
 		SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id
-		
-/*		
 		SET @entityName = 'Schema';
 		-- entity
 		SET @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
@@ -123,6 +121,7 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		END IF;
 		SET @entityValue = '{}';
 		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
+/*		
 		-- entity items
 		SET @tableEntityName = 'tbl_Schema';
 		SET @requiredFieldName = 'pk_SchemaID';
