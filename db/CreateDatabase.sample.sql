@@ -206,9 +206,9 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;
 			SET @schemaEntityID = @requiredFieldValue;
 			-- properties
-	--		SET @valueFieldForeignKeyParentID = schemaEntityID; -- links to entity			
-	--		SET @entityKey = '"properties"';
-	--		SET @entityValue = '{}';
+			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
+			SET @entityKey = '"properties"';
+			SET @entityValue = '{}';
 			
 	--		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 			
