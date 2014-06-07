@@ -191,10 +191,6 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		SET @entityKey = '"keys"';
 		SET @entityValue = '{}';
 		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
-
-
-		
-/*			
 		-- keys properties
 		SET @tableEntityName = 'tbl_Schema';
 		SET @requiredFieldName = 'pk_SchemaID';
@@ -205,13 +201,15 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		SET @andOrWhere = 'AND';
 		SET @andOrWhereFieldName = 'fk_ParentID';
 		SET @andOrWhereOperator = '=';
-		SET @andOrWhereValue = @schemaTypeID;	
-*/		
+		SET @andOrWhereValue = @schemaTypeID;
+		
+		
+--		===================== STUCK HERE ======================
 		
 		-- @REQUIRED_FIELD_VALUE is what we get back from the call to get field value
---		CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @andOrWhere, @andOrWhereFieldName, @andOrWhereOperator, @andOrWhereValue, @whereFieldName, @whereOperator, @whereValue);
+--		CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue, @andOrWhere, @andOrWhereFieldName, @andOrWhereOperator, @andOrWhereValue);
 --		SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;	
---		SET @schemaKeysID = @requiredFieldValue;	
+--		SET @schemaKeysID = @requiredFieldValue;
 		
 		
 --		CALL SP_ADD_KEYS_TO_TYPES_IN_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaKeysID);
