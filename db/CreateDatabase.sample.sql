@@ -121,22 +121,21 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		END IF;
 		SET @entityValue = '{}';
 		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
-/*		
 		-- entity items
 		SET @tableEntityName = 'tbl_Schema';
 		SET @requiredFieldName = 'pk_SchemaID';
 		SET @requiredFieldValue = '';			
 		SET @whereFieldName = 'SchemaKey';
 		SET @whereOperator = '=';
-		SET @whereValue = @entityKey;		
+		SET @whereValue = @entityKey;
 		-- @REQUIRED_FIELD_VALUE is what we get back from the call to get field value
 		CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue);
-		SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;
+		SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;	
 		SET @schemaEntityID = @requiredFieldValue;
 		-- properties
 		SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity	
 		SET @entityKey = '"properties"';
-		SET @entityValue = '{}';	
+		SET @entityValue = '{}';
 		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 		-- table name
 		SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
@@ -146,14 +145,13 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		ELSEIF (@entityType = 'KindOfEntity') THEN -- a kind of entity
 			SET @entityValue = CONCAT('"', @tableKindOfEntityName, '"'); -- NOTE: is it better to query against a view than the table... perhaps			
 		END IF;
-		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);			
+		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 		-- keys
 		SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
 		SET @entityKey = '"keys"';
-		SET @entityValue = '{}';	
-		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);			
-		---
-*/	
+		SET @entityValue = '{}';
+		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
+		-- end
 		SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
 		SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
 		SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id
