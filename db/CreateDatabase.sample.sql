@@ -312,20 +312,30 @@ Set @primaryKeyEntityID = 1;
 Set @foreignKeyParentID = @primaryKeyEntityID; -- links to itself
 SET @entityKey = '"domains"';
 SET @entityValue = '{}';
+SET @schemaDomainsID = @primaryKeyEntityID;
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+-- Call stored procedure insert into table for: database
+SET @entityName = 'Schema';
+Set @primaryKeyEntityID = @primaryKeyEntityID + 1;
+Set @foreignKeyParentID = @schemaDomainsID; -- links to domains
+SET @entityKey = CONCAT('"', LOWER(@databaseName), '"');
+SET @entityValue = '{}';
+SET @schemaDatabaseID = @primaryKeyEntityID;
 CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
 -- Call stored procedure insert into table for: schema name
 SET @entityName = 'Schema';
-Set @primaryKeyEntityID = 2;
-Set @foreignKeyParentID = 1; -- links to domains
-SET @entityKey = CONCAT('"', LOWER(@databaseName), '"');
-SET @entityValue = CONCAT('"schema_name": "', LOWER(@databaseName), '"');
+Set @primaryKeyEntityID = @primaryKeyEntityID + 1;
+Set @foreignKeyParentID = @schemaDatabaseID; -- links to database
+SET @entityKey = '"schema_name"';
+SET @entityValue = CONCAT('"', LOWER(@databaseName), '"');
 CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
 -- Call stored procedure insert into table for: types
 SET @entityName = 'Schema';
-Set @primaryKeyEntityID = 3;
-Set @foreignKeyParentID = 1; -- links to domains
-SET @entityKey = "types";
+Set @primaryKeyEntityID = @primaryKeyEntityID + 1;
+Set @foreignKeyParentID = @schemaDatabaseID; -- links to domains
+SET @entityKey = '"types"';
 SET @entityValue = '{}';
+SET @schemaTypesID = @primaryKeyEntityID;
 CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
 -- Call stored procedure main, providing it with the database name and entity name
 SET @entityName = 'Language';
