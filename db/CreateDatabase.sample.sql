@@ -68,20 +68,20 @@ CREATE PROCEDURE `SP_GET_FIELD_VALUE` (
 			SET @whereFieldName = WHERE_FIELD_NAME;
 			SET @whereOperator = WHERE_OPERATOR;
 			SET @whereValue = WHERE_VALUE;	
-
-	/*
 			SELECT CONCAT('Getting field value for: ', @requiredFieldName) AS SP_GET_FIELD_VALUE;
 			-- Select required field		
-			SET @query = CONCAT('
-				SELECT `' , @requiredFieldName, '` FROM `', @tableEntityName, '` WHERE `', @whereFieldName, '` ', @whereOperator, @whereValue
-			);
+			SET @query = CONCAT("
+				SELECT `" , @requiredFieldName, "` FROM `", @tableEntityName, "` WHERE `", @whereFieldName, "` ", @whereOperator, " '", @whereValue, "'
+			");
 			SELECT @query AS SP_GET_FIELD_VALUE;
 			PREPARE stmt FROM @query;
-			EXECUTE stmt INTO REQUIRED_FIELD_VALUE; -- does this work??
-			SELECT REQUIRED_FIELD_VALUE AS SP_GET_FIELD_VALUE; -- for test only
-			DEALLOCATE PREPARE stmt;
-	*/		
+			EXECUTE stmt;
 			
+	--		EXECUTE stmt INTO REQUIRED_FIELD_VALUE; -- does this work??, no ;(
+	--		SELECT `pk_SchemaID` FROM DUAL AS REQUIRED_FIELD_VALUE; -- for test only			
+	--		SELECT @requiredFieldName AS REQUIRED_FIELD_VALUE; -- for test only
+
+			DEALLOCATE PREPARE stmt;
 		COMMIT;
 	END; 
 $$
