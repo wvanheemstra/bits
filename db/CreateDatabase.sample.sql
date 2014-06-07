@@ -80,17 +80,22 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 		SET @viewKindOfEntityName = CONCAT('kind_of_', LOWER(@entityName));
 		SET @fieldKindOfEntityKey = CONCAT('KindOf', @entityName, 'Key');
 		SET @fieldKindOfEntityValue = CONCAT('KindOf', @entityName, 'Value');
-		-- Set names
+		-- Set boolean to true if entity is schema entity, else to false
+		IF (@entityName = 'Schema') THEN
+			SET @entityIsSchemaEntity = true;
+		ELSE
+			SET @entityIsSchemaEntity = false;
+		END IF;
 		SET NAMES utf8;
-		-- Set foreign key checks to off
-		SET FOREIGN_KEY_CHECKS = 0;	
+		SET FOREIGN_KEY_CHECKS = 0;	-- off
 		-- KIND OF ENTITY
 		START TRANSACTION;
-			SELECT CONCAT('Creating Kind of Entity table for: ', @entityName) AS Message;
+			SELECT CONCAT('Creating Kind of Entity table for: ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;
 			-- Drop kind of entity table		
 			SET @query = CONCAT('
 				DROP TABLE IF EXISTS `' , @tableKindOfEntityName, '`;
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;	
@@ -109,6 +114,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 					FOREIGN KEY (`' , @fieldForeignKeyLanguageID, '`) REFERENCES `' , @tableLanguage, '` (`' , @fieldPrimaryKeyLanguageID, '`) ON DELETE CASCADE
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
@@ -116,11 +122,12 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @query = CONCAT('
 				DROP VIEW IF EXISTS `' , @viewKindOfEntityName, '`;
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 			-- Create kind of entity view
-			SELECT CONCAT('Creating Kind of Entity view for: ', @entityName) AS Message;		
+			SELECT CONCAT('Creating Kind of Entity view for: ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;		
 			SET @query = CONCAT('
 				CREATE VIEW `' , @viewKindOfEntityName, '` AS
 					SELECT `' , @fieldPrimaryKeyKindOfEntityID, '`,		
@@ -132,26 +139,47 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 					`' , @fieldTimeStampUpdated, '`
 					FROM ' , @tableKindOfEntityName, ';
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 		COMMIT;
+		-- Skip if entity is itself the schema
+		IF(@entityIsSchemaEntity) THEN
+			SELECT CONCAT('Entity is Schema Entity') AS SP_CREATE_TABLES_AND_VIEWS;
+			-- Continue
+		ELSE
+			-- Call stored procedure insert into table schema for type: kind of entity
+			SELECT CONCAT('Entity for Schema: Kind of ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;
+			SET @entityNameTEMP = @entityName; -- safe original value for entity name
+			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
+			SET @entityName = 'Schema';
+			Set @primaryKeyEntityID = 0; -- auto-generated
+			Set @foreignKeyParentID = @schemaTypesID; -- links to types
+			SET @entityKey = CONCAT('"', @viewKindOfEntityName, '"');
+			SET @entityValue = '{}';
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
+			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
+		END IF;
 		START TRANSACTION;
 			-- Alter kind of entity table to add indices
 			SET @query = CONCAT('
 				ALTER TABLE `' , @tableKindOfEntityName, '` ADD INDEX `' , @fieldKindOfEntityKey, '` (`' , @fieldKindOfEntityKey, '`);
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 		COMMIT;
 		-- ENTITY
 		START TRANSACTION;
-			SELECT CONCAT('Creating Entity table for: ', @entityName) AS Message;
+			SELECT CONCAT('Creating Entity table for: ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;
 			-- Drop entity table		
 			SET @query = CONCAT('
 				DROP TABLE IF EXISTS `' , @tableEntityName, '`;
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;	
@@ -172,6 +200,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 					FOREIGN KEY (`' , @fieldForeignKeyLanguageID, '`) REFERENCES `' , @tableLanguage, '` (`' , @fieldPrimaryKeyLanguageID, '`) ON DELETE CASCADE	
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
@@ -179,11 +208,12 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @query = CONCAT('
 				DROP VIEW IF EXISTS `' , @viewEntityName, '`;
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;		
 			-- Create entity view
-			SELECT CONCAT('Creating Entity view for: ', @entityName) AS Message;
+			SELECT CONCAT('Creating Entity view for: ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;
 			SET @query = CONCAT('
 				CREATE VIEW `' , @viewEntityName, '` AS
 					SELECT `' , @fieldPrimaryKeyEntityID, '`,		
@@ -196,21 +226,40 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 					`' , @fieldTimeStampUpdated, '`
 					FROM ' , LOWER(@tableEntityName), ';
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 		COMMIT;
+		-- Skip if entity is itself the schema
+		IF(@entityIsSchemaEntity) THEN
+			SELECT CONCAT('Entity is Schema Entity') AS SP_CREATE_TABLES_AND_VIEWS;
+			-- Continue
+		ELSE		
+			-- Call stored procedure insert into table schema for type: entity
+			SELECT CONCAT('Entity for Schema: ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;		
+			SET @entityNameTEMP = @entityName; -- safe original value for entity name
+			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name			
+			SET @entityName = 'Schema';
+			Set @primaryKeyEntityID = 0; -- auto-generated
+			Set @foreignKeyParentID = @schemaTypesID; -- links to types
+			SET @entityKey = CONCAT('"', @viewEntityName, '"');
+			SET @entityValue = '{}';
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
+			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name			
+		END IF;
 		START TRANSACTION;
 			-- Alter entity table to add indices
 			SET @query = CONCAT('
 				ALTER TABLE `' , @tableEntityName, '` ADD INDEX `' , @fieldEntityKey, '` (`' , @fieldEntityKey, '`);
 			');
+			SELECT @query AS SP_CREATE_TABLES_AND_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 		COMMIT;
-		-- Set foreign key checks to on
-		SET FOREIGN_KEY_CHECKS = 1;	
+		SET FOREIGN_KEY_CHECKS = 1;	-- on
 	END; 
 $$
 DELIMITER ;
@@ -268,10 +317,8 @@ CREATE PROCEDURE `SP_INSERT_INTO_TABLE` (
 		IN `ENTITY_VALUE` varchar(5000) CHARACTER SET 'utf8'
 	)
 	BEGIN
-		-- Set names
 		SET NAMES utf8;
-		-- Set foreign key checks to off
-		SET FOREIGN_KEY_CHECKS = 0;	
+		SET FOREIGN_KEY_CHECKS = 0;	-- off
 		SET @tableEntityName = CONCAT('tbl_', LOWER(@entityName));
 		SET @fieldPrimaryKeyEntityID = CONCAT('pk_', @entityName, 'ID');
 		SET @valueFieldPrimaryKeyEntityID = PRIMARY_KEY_ENTITY_ID;
@@ -295,11 +342,12 @@ CREATE PROCEDURE `SP_INSERT_INTO_TABLE` (
 				'",@valueTimeStampCreated,"',
 				'",@valueTimeStampUpdated,"');
 			");
-			SELECT @query AS Message;
+			SELECT @query AS SP_INSERT_INTO_TABLE;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 		COMMIT;
+		SET FOREIGN_KEY_CHECKS = 1;	-- on
 	END; 
 $$
 DELIMITER ;
@@ -340,7 +388,7 @@ CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @f
 -- Call stored procedure main, providing it with the database name and entity name
 SET @entityName = 'Language';
 CALL SP_MAIN(@databaseName, @entityName);
--- Call stored procedure insert into table for: english
+-- Call stored procedure insert into table for: English
 SET @entityName = 'Language';
 Set @primaryKeyEntityID = 1;
 Set @foreignKeyParentID = 1; -- links to itself
@@ -373,7 +421,7 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (
 		SET @valueTimeStampCreated = CAST('0000-00-00 00:00:00' AS DATETIME);
 		SET @valueTimeStampUpdated = CAST('0000-00-00 00:00:00' AS DATETIME);
 		SET NAMES utf8;
-		SET FOREIGN_KEY_CHECKS = 0;	
+		SET FOREIGN_KEY_CHECKS = 0;	-- off
 		WHILE (LOCATE(@separator, @valueFieldEntityValueArray) > 0) DO
 			SET @valueFieldEntityValue = SUBSTRING_INDEX(@valueFieldEntityValueArray, @separator, 1);
 			SET @valueFieldEntityValue = REPLACE(@valueFieldEntityValue,'"',''); -- removes double quotes
@@ -391,7 +439,7 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (
 					'",@valueTimeStampCreated,"',
 					'",@valueTimeStampUpdated,"');
 				");
-				SELECT @query AS Message;
+				SELECT @query AS SP_INSERT_ARRAY_OF_VALUES;
 				PREPARE stmt FROM @query;
 				EXECUTE stmt;
 				DEALLOCATE PREPARE stmt;
@@ -399,7 +447,7 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (
 			SET @valueFieldPrimaryKeyEntityID = @valueFieldPrimaryKeyEntityID + 1;
 			SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;
 		END WHILE;
-		SET FOREIGN_KEY_CHECKS = 1;
+		SET FOREIGN_KEY_CHECKS = 1; -- on
 	END; 
 $$
 DELIMITER ;
@@ -436,15 +484,15 @@ CREATE PROCEDURE `SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS` (
 			IF findFinished = 1 THEN 
 				LEAVE getFieldValue;
 			END IF;
-			SELECT CONCAT('Found: ', fieldValue) AS Message_FieldValue;
+			SELECT CONCAT('Found fieldValue: ', fieldValue) AS SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS;
 			SET @entityName = fieldValue;
 			CASE  
 				WHEN @entityName = 'Schema' THEN
-					SELECT CONCAT('Skipping: ', @entityName) AS Message; 			
+					SELECT CONCAT('Skipping: ', @entityName) AS SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS; 			
 				WHEN @entityName = 'Entity' THEN     
-					SELECT CONCAT('Skipping: ', @entityName) AS Message;
+					SELECT CONCAT('Skipping: ', @entityName) AS SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS;
 				WHEN @entityName = 'Language' THEN
-					SELECT CONCAT('Skipping: ', @entityName) AS Message; 
+					SELECT CONCAT('Skipping: ', @entityName) AS SP_LOOP_FIELD_CALL_CREATE_TABLES_AND_VIEWS; 
 				ELSE CALL `bits`.SP_CREATE_TABLES_AND_VIEWS(@entityName);
 			END CASE;
 		END LOOP getFieldValue;
@@ -472,8 +520,8 @@ CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (
 		SET @separator = LINKED_ENTITIES_NAMES_SEPARATOR;
 		SET @firstEntityName = SUBSTRING_INDEX(@linkedEntitiesNames, @separator, 1);
 		SET @secondEntityName = REPLACE(@linkedEntitiesNames,CONCAT(@firstEntityName, @separator),'');
-		SELECT @firstEntityName AS Message_FirstEntityName;
-		SELECT @secondEntityName AS Message_SecondEntityName;
+		SELECT CONCAT('First Entity Name: ', @firstEntityName) AS SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS;
+		SELECT CONCAT('Second Entity Name: ', @secondEntityName) AS SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS;
 		SET @tableLinkedEntitiesNames = CONCAT('tbl_', LOWER(@firstEntityName), '_',  LOWER(@secondEntityName));
 		SET @fieldPrimaryKeyLinkedEntitiesID = CONCAT('pk_', @firstEntityName, @secondEntityName, 'ID');
 		SET @fieldForeignKeyFirstEntityID = CONCAT('fk_', @firstEntityName, 'ID');
@@ -485,17 +533,16 @@ CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (
 		SET @viewLinkedEntitiesNames = CONCAT(LOWER(@firstEntityName), '_', LOWER(@secondEntityName));
 		SET @fieldPrimaryKeyFirstEntityID = CONCAT('pk_', @firstEntityName, 'ID');
 		SET @fieldPrimaryKeySecondEntityID = CONCAT('pk_', @secondEntityName, 'ID');
-		-- Set names
 		SET NAMES utf8;
-		-- Set foreign key checks to off
-		SET FOREIGN_KEY_CHECKS = 0;	
+		SET FOREIGN_KEY_CHECKS = 0;	-- off
 		-- LINKED ENTITIES
 		START TRANSACTION;
-			SELECT CONCAT('Creating Linked Entities table for: ', @linkedEntitiesNames) AS Message;
+			SELECT CONCAT('Creating Linked Entities table for: ', @linkedEntitiesNames) AS SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS;
 			-- Drop entity table		
 			SET @query = CONCAT('
 				DROP TABLE IF EXISTS `' , @tableLinkedEntitiesNames, '`;
 			');
+			SELECT @query AS SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;	
@@ -512,7 +559,7 @@ CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (
 					FOREIGN KEY (`' , @fieldForeignKeySecondEntityID, '`) REFERENCES `' , @tableSecondEntityName, '` (`' , @fieldPrimaryKeySecondEntityID, '`) ON DELETE CASCADE					
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 			');
-			SELECT CONCAT(@query) AS Message;			
+			SELECT @query AS SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS;			
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
@@ -520,11 +567,12 @@ CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (
 			SET @query = CONCAT('
 				DROP VIEW IF EXISTS `' , @viewLinkedEntitiesNames, '`;
 			');
+			SELECT @query AS SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 			-- Create linked entities view
-			SELECT CONCAT('Creating Linked Entities view for: ', @linkedEntitiesNames) AS Message;
+			SELECT CONCAT('Creating Linked Entities view for: ', @linkedEntitiesNames) AS SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS;
 			SET @query = CONCAT('
 				CREATE VIEW `' , @viewLinkedEntitiesNames, '` AS
 					SELECT `' , @fieldPrimaryKeyLinkedEntitiesID, '`,		
@@ -534,13 +582,12 @@ CREATE PROCEDURE `SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS` (
 					`' , @fieldTimeStampUpdated, '`
 					FROM ' , @tableLinkedEntitiesNames, ';
 			');
-			SELECT CONCAT(@query) AS Message;
+			SELECT @query AS SP_CREATE_LINKED_TABLES_AND_LINKED_VIEWS;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 		COMMIT;
-		-- Set foreign key checks to on
-		SET FOREIGN_KEY_CHECKS = 1;	
+		SET FOREIGN_KEY_CHECKS = 1;	-- on
 	END; 
 $$
 DELIMITER ;
@@ -575,7 +622,7 @@ CREATE PROCEDURE `SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS` (
 			SET @delimiter = ',';
 			SET @linkedEntitiesNames = FN_SPLIT_STRING(@multipleLinkedEntitiesNames, @delimiter, @counter);
 			SET @linkedEntitiesNames = REPLACE(@linkedEntitiesNames,'"',''); -- removes double quotes
-			SELECT 	@linkedEntitiesNames AS Message_LinkedEntitiesNames;
+			SELECT 	CONCAT('Linked Entities Names: ', @linkedEntitiesNames) AS SP_CREATE_MULTIPLE_LINKED_TABLES_AND_LINKED_VIEWS;
 			IF @linkedEntitiesNames = '' THEN
 				SET @counter = 0;
 			ELSE
@@ -603,10 +650,8 @@ CREATE PROCEDURE `SP_UPDATE_SCHEMA` (
 		IN `KIND_OF_SCHEMA` varchar(255) CHARACTER SET 'utf8'
 	)
 	BEGIN
-		-- Set names
 		SET NAMES utf8;
-		-- Set foreign key checks to off
-		SET FOREIGN_KEY_CHECKS = 0;	
+		SET FOREIGN_KEY_CHECKS = 0;	-- off
 		-- LINKED ENTITIES
 		START TRANSACTION;
 			SET @query = CONCAT('
@@ -623,13 +668,12 @@ CREATE PROCEDURE `SP_UPDATE_SCHEMA` (
 		--			||\']}\'
 		--			FROM DUAL;
 			');
-			SELECT CONCAT(@query) AS Message;
+			SELECT CONCAT(@query) AS SP_UPDATE_SCHEMA;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 		COMMIT;
-		-- Set foreign key checks to on
-		SET FOREIGN_KEY_CHECKS = 1;		
+		SET FOREIGN_KEY_CHECKS = 1;	-- on	
 	END; 
 $$
 DELIMITER ;
@@ -642,10 +686,8 @@ CREATE PROCEDURE `SP_OUTPUT_SCHEMA` (
 	)
 	BEGIN
 		SET @childID = SCHEMA_ID;
-		-- Set names
 		SET NAMES utf8;
-		-- Set foreign key checks to off
-		SET FOREIGN_KEY_CHECKS = 0;	
+		SET FOREIGN_KEY_CHECKS = 0;	-- off
 		-- LINKED ENTITIES
 		START TRANSACTION;
 			-- child field is pk_SchemaID
@@ -658,13 +700,12 @@ CREATE PROCEDURE `SP_OUTPUT_SCHEMA` (
 				WHERE child.pk_SchemaID = ', @childID, '
 				AND parent.pk_SchemaID <> ', @childID
 			);
-			SELECT CONCAT(@query) AS Message;
+			SELECT CONCAT(@query) AS SP_OUTPUT_SCHEMA;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			DEALLOCATE PREPARE stmt;
 		COMMIT;
-		-- Set foreign key checks to on
-		SET FOREIGN_KEY_CHECKS = 1;		
+		SET FOREIGN_KEY_CHECKS = 1;	-- on
 	END; 
 $$
 DELIMITER ;
