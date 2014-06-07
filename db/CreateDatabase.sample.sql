@@ -80,7 +80,7 @@ CREATE PROCEDURE `SP_GET_FIELD_VALUE` (
 			-- Select required field
 			IF(@andOrWhere != '') THEN
 				SET @query = CONCAT("
-					SELECT `" , @requiredFieldName, "` FROM `", @tableEntityName, "` WHERE `", @whereFieldName, "` ", @whereOperator, " '", @whereValue, "' ", @andOrWhere, " `", @whereFieldName, "` ", @whereOperator, " '", @whereValue,  "' INTO @REQUIRED_FIELD_VALUE
+					SELECT `" , @requiredFieldName, "` FROM `", @tableEntityName, "` WHERE `", @whereFieldName, "` ", @whereOperator, " '", @whereValue, "' ", @andOrWhere, " `", @andOrWhereFieldName, "` ", @andOrWhereOperator, " '", @andOrWhereValue,  "' INTO @REQUIRED_FIELD_VALUE
 				");
 			ELSE
 				SET @query = CONCAT("
@@ -110,12 +110,29 @@ CREATE PROCEDURE `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA` (
 		IN `SCHEMA_KEYS_ID` int(11)
 	)
 	BEGIN
-		-- TO DO
+		SET @databaseName = DATABASE_NAME;
+		SET @entityName = ENTITY_NAME;
+		SET @entityType = ENTITY_TYPE;
+		SET @viewEntityName = VIEW_ENTITY_NAME;
+		SET @viewKindOfEntityName = VIEW_KIND_OF_ENTITY_NAME;
+		SET @tableEntityName = TABLE_ENTITY_NAME;
+		SET @fieldPrimaryKeyEntityID = FIELD_PRIMARY_KEY_ENTITY_ID;
+		SET @schemaKeysID = SCHEMA_KEYS_ID;
+		-- Call stored procedure insert into table schema for type: kind of entity
+		SELECT CONCAT('Entity for Schema: ', @entityName) AS SP_ADD_KEYS_TO_TYPES_IN_SCHEMA;
+--		SET @entityNameTEMP = @entityName; -- safe original value for entity name
+--		SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
+--		SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id
+--		SET @entityName = 'Schema';
 
 
+		-- MORE ...
+		
 
-
-
+		-- end
+--		SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
+--		SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
+--		SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id
 	END; 
 $$
 DELIMITER ;
@@ -201,18 +218,15 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		SET @andOrWhere = 'AND';
 		SET @andOrWhereFieldName = 'fk_ParentID';
 		SET @andOrWhereOperator = '=';
-		SET @andOrWhereValue = @schemaTypeID;
-		
-		
---		===================== STUCK HERE ======================
-		
+		SET @andOrWhereValue = @schemaEntityID; -- link to entity as the parent
 		-- @REQUIRED_FIELD_VALUE is what we get back from the call to get field value
---		CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue, @andOrWhere, @andOrWhereFieldName, @andOrWhereOperator, @andOrWhereValue);
---		SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;	
---		SET @schemaKeysID = @requiredFieldValue;
+		CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue, @andOrWhere, @andOrWhereFieldName, @andOrWhereOperator, @andOrWhereValue);
+		SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;	
+		SET @schemaKeysID = @requiredFieldValue;
+
+--		===== WE ARE HERE ====		
 		
-		
---		CALL SP_ADD_KEYS_TO_TYPES_IN_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaKeysID);
+		CALL SP_ADD_KEYS_TO_TYPES_IN_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaKeysID);
 		
 		
 		
