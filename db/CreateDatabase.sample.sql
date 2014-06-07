@@ -58,7 +58,11 @@ CREATE PROCEDURE `SP_GET_FIELD_VALUE` (
 		OUT `REQUIRED_FIELD_VALUE` varchar(255) CHARACTER SET 'utf8',
 		IN `WHERE_FIELD_NAME` varchar(255) CHARACTER SET 'utf8', 
 		IN `WHERE_OPERATOR` varchar(255) CHARACTER SET 'utf8', 
-		IN `WHERE_VALUE` varchar(255) CHARACTER SET 'utf8'
+		IN `WHERE_VALUE` varchar(255) CHARACTER SET 'utf8',
+		IN `AND_OR_WHERE` varchar(255) CHARACTER SET 'utf8', 
+		IN `AND_OR_WHERE_FIELD_NAME` varchar(255) CHARACTER SET 'utf8', 
+		IN `AND_OR_WHERE_OPERATOR` varchar(255) CHARACTER SET 'utf8', 
+		IN `AND_OR_WHERE_VALUE` varchar(255) CHARACTER SET 'utf8'
 	)
 	BEGIN
 		START TRANSACTION;
@@ -68,17 +72,50 @@ CREATE PROCEDURE `SP_GET_FIELD_VALUE` (
 			SET @whereFieldName = WHERE_FIELD_NAME;
 			SET @whereOperator = WHERE_OPERATOR;
 			SET @whereValue = WHERE_VALUE;	
+			SET @andOrWhere = AND_OR_WHERE;			
+			SET @andOrWhereFieldName = AND_OR_WHERE_FIELD_NAME;
+			SET @andOrWhereOperator = AND_OR_WHERE_OPERATOR;
+			SET @andOrWhereValue = AND_OR_WHERE_VALUE;
 			SELECT CONCAT('Getting field value for: ', @requiredFieldName) AS SP_GET_FIELD_VALUE;
-			-- Select required field		
-			SET @query = CONCAT("
-				SELECT `" , @requiredFieldName, "` FROM `", @tableEntityName, "` WHERE `", @whereFieldName, "` ", @whereOperator, " '", @whereValue, "' INTO @REQUIRED_FIELD_VALUE
-			");
+			-- Select required field
+			IF(@andOrWhere != '') THEN
+				SET @query = CONCAT("
+					SELECT `" , @requiredFieldName, "` FROM `", @tableEntityName, "` WHERE `", @whereFieldName, "` ", @whereOperator, " '", @whereValue, "' ", @andOrWhere, " `", @whereFieldName, "` ", @whereOperator, " '", @whereValue,  "' INTO @REQUIRED_FIELD_VALUE
+				");
+			ELSE
+				SET @query = CONCAT("
+					SELECT `" , @requiredFieldName, "` FROM `", @tableEntityName, "` WHERE `", @whereFieldName, "` ", @whereOperator, " '", @whereValue, "' INTO @REQUIRED_FIELD_VALUE
+				");			
+			END IF;
 			SELECT @query AS SP_GET_FIELD_VALUE;
 			PREPARE stmt FROM @query;
 			EXECUTE stmt;
 			SELECT @REQUIRED_FIELD_VALUE AS SP_GET_FIELD_VALUE; -- this works !!!
 			DEALLOCATE PREPARE stmt;
 		COMMIT;
+	END; 
+$$
+DELIMITER ;
+-- Create stored procedure to add keys to schema
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA`;
+CREATE PROCEDURE `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA` (
+		IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8',
+		IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8',
+		IN `ENTITY_TYPE` varchar(255) CHARACTER SET 'utf8',
+		IN `VIEW_ENTITY_NAME` varchar(255) CHARACTER SET 'utf8',
+		IN `VIEW_KIND_OF_ENTITY_NAME` varchar(255) CHARACTER SET 'utf8',
+		IN `TABLE_ENTITY_NAME` varchar(255) CHARACTER SET 'utf8',
+		IN `FIELD_PRIMARY_KEY_ENTITY_ID` varchar(255) CHARACTER SET 'utf8',
+		IN `SCHEMA_KEYS_ID` int(11)
+	)
+	BEGIN
+		-- TO DO
+
+
+
+
+
 	END; 
 $$
 DELIMITER ;
@@ -104,7 +141,6 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		SET @tableEntityName = TABLE_ENTITY_NAME;
 		SET @fieldPrimaryKeyEntityID = FIELD_PRIMARY_KEY_ENTITY_ID;
 		SET @schemaTypesID = SCHEMA_TYPES_ID;
-		
 		-- Call stored procedure insert into table schema for type: kind of entity
 		SELECT CONCAT('Entity for Schema: ', @entityName) AS SP_ADD_TYPES_TO_SCHEMA;
 		SET @entityNameTEMP = @entityName; -- safe original value for entity name
@@ -128,8 +164,12 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		SET @whereFieldName = 'SchemaKey';
 		SET @whereOperator = '=';
 		SET @whereValue = @entityKey;
+		SET @andOrWhere = '';
+		SET @andOrWhereFieldName = '';
+		SET @andOrWhereOperator = '';
+		SET @andOrWhereValue = '';
 		-- @REQUIRED_FIELD_VALUE is what we get back from the call to get field value
-		CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue);
+		CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue, @andOrWhere, @andOrWhereFieldName, @andOrWhereOperator, @andOrWhereValue);
 		SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;	
 		SET @schemaEntityID = @requiredFieldValue;
 		-- properties
@@ -151,6 +191,36 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		SET @entityKey = '"keys"';
 		SET @entityValue = '{}';
 		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
+
+
+		
+/*			
+		-- keys properties
+		SET @tableEntityName = 'tbl_Schema';
+		SET @requiredFieldName = 'pk_SchemaID';
+		SET @requiredFieldValue = '';			
+		SET @whereFieldName = 'SchemaKey';
+		SET @whereOperator = '=';
+		SET @whereValue = '"keys"';
+		SET @andOrWhere = 'AND';
+		SET @andOrWhereFieldName = 'fk_ParentID';
+		SET @andOrWhereOperator = '=';
+		SET @andOrWhereValue = @schemaTypeID;	
+*/		
+		
+		-- @REQUIRED_FIELD_VALUE is what we get back from the call to get field value
+--		CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @andOrWhere, @andOrWhereFieldName, @andOrWhereOperator, @andOrWhereValue, @whereFieldName, @whereOperator, @whereValue);
+--		SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;	
+--		SET @schemaKeysID = @requiredFieldValue;	
+		
+		
+--		CALL SP_ADD_KEYS_TO_TYPES_IN_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaKeysID);
+		
+		
+		
+		
+		
+
 		-- end
 		SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
 		SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
