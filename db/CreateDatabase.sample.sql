@@ -154,11 +154,11 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @entityNameTEMP = @entityName; -- safe original value for entity name
 			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
 			SET @entityName = 'Schema';
-			Set @primaryKeyEntityID = 0; -- auto-generated
-			Set @foreignKeyParentID = @schemaTypesID; -- links to types
+			Set @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
+			Set @valueFieldForeignKeyParentID = @schemaTypesID; -- links to types
 			SET @entityKey = CONCAT('"', @viewKindOfEntityName, '"');
 			SET @entityValue = '{}';
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
 			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
 		END IF;
@@ -241,11 +241,11 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @entityNameTEMP = @entityName; -- safe original value for entity name
 			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name			
 			SET @entityName = 'Schema';
-			Set @primaryKeyEntityID = 0; -- auto-generated
-			Set @foreignKeyParentID = @schemaTypesID; -- links to types
+			Set @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
+			Set @valueFieldForeignKeyParentID = @schemaTypesID; -- links to types
 			SET @entityKey = CONCAT('"', @viewEntityName, '"');
 			SET @entityValue = '{}';
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
 			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name			
 		END IF;
@@ -356,45 +356,45 @@ SET @entityName = 'Schema';
 CALL SP_MAIN(@databaseName, @entityName);
 -- Call stored procedure insert into table for: domains
 SET @entityName = 'Schema';
-Set @primaryKeyEntityID = 1;
-Set @foreignKeyParentID = @primaryKeyEntityID; -- links to itself
+Set @valueFieldPrimaryKeyEntityID = 1;
+Set @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID; -- links to itself
 SET @entityKey = '"domains"';
 SET @entityValue = '{}';
-SET @schemaDomainsID = @primaryKeyEntityID;
-CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+SET @schemaDomainsID = @valueFieldPrimaryKeyEntityID;
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 -- Call stored procedure insert into table for: database
 SET @entityName = 'Schema';
-Set @primaryKeyEntityID = @primaryKeyEntityID + 1;
-Set @foreignKeyParentID = @schemaDomainsID; -- links to domains
+Set @valueFieldPrimaryKeyEntityID = @valueFieldPrimaryKeyEntityID + 1;
+Set @valueFieldForeignKeyParentID = @schemaDomainsID; -- links to domains
 SET @entityKey = CONCAT('"', LOWER(@databaseName), '"');
 SET @entityValue = '{}';
-SET @schemaDatabaseID = @primaryKeyEntityID;
-CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+SET @schemaDatabaseID = @valueFieldPrimaryKeyEntityID;
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 -- Call stored procedure insert into table for: schema name
 SET @entityName = 'Schema';
-Set @primaryKeyEntityID = @primaryKeyEntityID + 1;
-Set @foreignKeyParentID = @schemaDatabaseID; -- links to database
+Set @valueFieldPrimaryKeyEntityID = @valueFieldPrimaryKeyEntityID + 1;
+Set @valueFieldForeignKeyParentID = @schemaDatabaseID; -- links to database
 SET @entityKey = '"schema_name"';
 SET @entityValue = CONCAT('"', LOWER(@databaseName), '"');
-CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 -- Call stored procedure insert into table for: types
 SET @entityName = 'Schema';
-Set @primaryKeyEntityID = @primaryKeyEntityID + 1;
-Set @foreignKeyParentID = @schemaDatabaseID; -- links to domains
+Set @valueFieldPrimaryKeyEntityID = @valueFieldPrimaryKeyEntityID + 1;
+Set @valueFieldForeignKeyParentID = @schemaDatabaseID; -- links to domains
 SET @entityKey = '"types"';
 SET @entityValue = '{}';
-SET @schemaTypesID = @primaryKeyEntityID;
-CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+SET @schemaTypesID = @valueFieldPrimaryKeyEntityID;
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 -- Call stored procedure main, providing it with the database name and entity name
 SET @entityName = 'Language';
 CALL SP_MAIN(@databaseName, @entityName);
 -- Call stored procedure insert into table for: English
 SET @entityName = 'Language';
-Set @primaryKeyEntityID = 1;
-Set @foreignKeyParentID = 1; -- links to itself
+Set @valueFieldPrimaryKeyEntityID = 1;
+Set @valueFieldForeignKeyParentID = 1; -- links to itself
 SET @entityKey = 'Language';
 SET @entityValue = @databaseLanguage;
-CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @primaryKeyEntityID, @foreignKeyParentID, @entityKey, @entityValue);
+CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 -- Create stored procedure that inserts an array of values
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_INSERT_ARRAY_OF_VALUES`;
@@ -426,6 +426,16 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (
 			SET @valueFieldEntityValue = SUBSTRING_INDEX(@valueFieldEntityValueArray, @separator, 1);
 			SET @valueFieldEntityValue = REPLACE(@valueFieldEntityValue,'"',''); -- removes double quotes
 			SET @valueFieldEntityValueArray = SUBSTRING(@valueFieldEntityValueArray, LOCATE(@separator,@valueFieldEntityValueArray) + 1);
+		
+		/*
+			THIS CALL 
+		*/
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @valueFieldEntityKey, @valueFieldEntityValue);
+		/*
+			REPLACES BELOW QUERY
+		*/
+			
+		/*
 			START TRANSACTION;
 				SET @query = CONCAT("
 					INSERT INTO `",@databaseName,"`.`",@tableEntityName,"` 
@@ -444,6 +454,8 @@ CREATE PROCEDURE `SP_INSERT_ARRAY_OF_VALUES` (
 				EXECUTE stmt;
 				DEALLOCATE PREPARE stmt;
 			COMMIT;
+		*/	
+			
 			SET @valueFieldPrimaryKeyEntityID = @valueFieldPrimaryKeyEntityID + 1;
 			SET @valueFieldForeignKeyParentID = @valueFieldPrimaryKeyEntityID;
 		END WHILE;
