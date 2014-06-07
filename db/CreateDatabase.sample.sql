@@ -260,52 +260,6 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			-- Continue
 		ELSE
 			CALL SP_ADD_TYPES_TO_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaTypesID);
-	
-	/* MOVE TO SP_ADD_TYPES_TO_SCHEMA
-			-- Call stored procedure insert into table schema for type: kind of entity
-			SELECT CONCAT('Entity for Schema: Kind of ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;
-			SET @entityNameTEMP = @entityName; -- safe original value for entity name
-			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
-			SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id
-			SET @entityName = 'Schema';
-			-- entity
-			SET @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
-			SET @valueFieldForeignKeyParentID = @schemaTypesID; -- links to types
-			SET @entityKey = CONCAT('"', @viewKindOfEntityName, '"');
-			SET @entityValue = '{}';
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
-			-- entity items
-			SET @tableEntityName = 'tbl_Schema';
-			SET @requiredFieldName = 'pk_SchemaID';
-			SET @requiredFieldValue = '';			
-			SET @whereFieldName = 'SchemaKey';
-			SET @whereOperator = '=';
-			SET @whereValue = @entityKey;		
-			-- @REQUIRED_FIELD_VALUE is what we get back from the call to get field value
-			CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue);
-			SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;
-			SET @schemaEntityID = @requiredFieldValue;
-			-- properties
-			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
-			SET @entityKey = '"properties"';
-			SET @entityValue = '{}';	
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
-			-- table name
-			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
-			SET @entityKey = '"table_name"';
-			SET @entityValue = CONCAT('"', @tableKindOfEntityName, '"'); -- NOTE: is it better to query against a view than the table... perhaps
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);			
-			-- keys
-			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
-			SET @entityKey = '"keys"';
-			SET @entityValue = '{}';	
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);			
-			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
-			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
-			SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id	
-
-		*/
-			
 		END IF;
 		START TRANSACTION;
 			-- Alter kind of entity table to add indices
@@ -382,53 +336,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SELECT CONCAT('Entity is Schema Entity') AS SP_CREATE_TABLES_AND_VIEWS;
 			-- Continue
 		ELSE
-			CALL SP_ADD_TYPES_TO_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaTypesID);
-	
-	/* MOVE TO SP_ADD_TYPES_TO_SCHEMA 
-	
-			-- Call stored procedure insert into table schema for type: entity
-			SELECT CONCAT('Entity for Schema: ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;		
-			SET @entityNameTEMP = @entityName; -- safe original value for entity name
-			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
-			SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id			
-			SET @entityName = 'Schema';
-			-- entity
-			Set @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
-			Set @valueFieldForeignKeyParentID = @schemaTypesID; -- links to types
-			SET @entityKey = CONCAT('"', @viewEntityName, '"');
-			SET @entityValue = '{}';
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
-			-- entity items
-			SET @tableEntityName = 'tbl_Schema';
-			SET @requiredFieldName = 'pk_SchemaID';
-			SET @requiredFieldValue = '';			
-			SET @whereFieldName = 'SchemaKey';
-			SET @whereOperator = '=';
-			SET @whereValue = @entityKey;		
-			-- @REQUIRED_FIELD_VALUE is what we get back from the call to get field value
-			CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue);
-			SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;
-			SET @schemaEntityID = @requiredFieldValue;
-			-- properties
-			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
-			SET @entityKey = '"properties"';
-			SET @entityValue = '{}';	
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
-			-- table name
-			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
-			SET @entityKey = '"table_name"';
-			SET @entityValue = CONCAT('"', @tableEntityNameTEMP, '"'); -- NOTE: WE NEED TO USE THE TEMP NAME HERE. And is it better to query against a view than the table... perhaps
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);			
-			-- keys
-			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
-			SET @entityKey = '"keys"';
-			SET @entityValue = '{}';	
-			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
-			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
-			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name	
-			SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id
-			
-	*/		
+			CALL SP_ADD_TYPES_TO_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaTypesID);		
 		END IF;
 		START TRANSACTION;
 			-- Alter entity table to add indices
