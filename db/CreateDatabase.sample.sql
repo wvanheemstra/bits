@@ -104,11 +104,14 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		SET @tableEntityName = TABLE_ENTITY_NAME;
 		SET @fieldPrimaryKeyEntityID = FIELD_PRIMARY_KEY_ENTITY_ID;
 		SET @schemaTypesID = SCHEMA_TYPES_ID;
+		
 		-- Call stored procedure insert into table schema for type: kind of entity
-		SELECT CONCAT('Entity for Schema: ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;
+		SELECT CONCAT('Entity for Schema: ', @entityName) AS SP_ADD_TYPES_TO_SCHEMA;
 		SET @entityNameTEMP = @entityName; -- safe original value for entity name
 		SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
 		SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id
+		
+/*		
 		SET @entityName = 'Schema';
 		-- entity
 		SET @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
@@ -151,6 +154,7 @@ CREATE PROCEDURE `SP_ADD_TYPES_TO_SCHEMA` (
 		SET @entityValue = '{}';	
 		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);			
 		---
+*/	
 		SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
 		SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
 		SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id
@@ -258,9 +262,9 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SELECT CONCAT('Entity is Schema Entity') AS SP_CREATE_TABLES_AND_VIEWS;
 			-- Continue
 		ELSE
-	--		CALL SP_ADD_TYPES_TO_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaTypesID);
+			CALL SP_ADD_TYPES_TO_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaTypesID);
 	
-	/* MOVE TO SP_ADD_TYPES_TO_SCHEMA	 */	
+	/* MOVE TO SP_ADD_TYPES_TO_SCHEMA
 			-- Call stored procedure insert into table schema for type: kind of entity
 			SELECT CONCAT('Entity for Schema: Kind of ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;
 			SET @entityNameTEMP = @entityName; -- safe original value for entity name
@@ -303,7 +307,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
 			SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id	
 
-		/* */
+		*/
 			
 		END IF;
 		START TRANSACTION;
@@ -381,9 +385,9 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SELECT CONCAT('Entity is Schema Entity') AS SP_CREATE_TABLES_AND_VIEWS;
 			-- Continue
 		ELSE
-	--		CALL SP_ADD_TYPES_TO_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaTypesID);
+			CALL SP_ADD_TYPES_TO_SCHEMA(@databaseName, @entityName, @entityType, @viewEntityName, @viewKindOfEntityName, @tableEntityName, @fieldPrimaryKeyEntityID, @schemaTypesID);
 	
-	/* MOVE TO SP_ADD_TYPES_TO_SCHEMA */
+	/* MOVE TO SP_ADD_TYPES_TO_SCHEMA 
 	
 			-- Call stored procedure insert into table schema for type: entity
 			SELECT CONCAT('Entity for Schema: ', @entityName) AS SP_CREATE_TABLES_AND_VIEWS;		
@@ -427,7 +431,7 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name	
 			SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id
 			
-	/* */		
+	*/		
 		END IF;
 		START TRANSACTION;
 			-- Alter entity table to add indices
