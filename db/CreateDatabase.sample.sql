@@ -208,16 +208,18 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			-- properties
 			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
 			SET @entityKey = '"properties"';
-			SET @entityValue = '{}';
-			
-	--		CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
-			
-			
+			SET @entityValue = '{}';	
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 			-- table name
-			
-			
+			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
+			SET @entityKey = '"table_name"';
+			SET @entityValue = CONCAT('"', @tableKindOfEntityName, '"'); -- NOTE: is it better to query against a view than the table... perhaps
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);			
 			-- keys
-			
+			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
+			SET @entityKey = '"keys"';
+			SET @entityValue = '{}';	
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);			
 			
 			
 			
@@ -305,10 +307,37 @@ CREATE PROCEDURE `SP_CREATE_TABLES_AND_VIEWS` (
 			SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
 			SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id			
 			SET @entityName = 'Schema';
+			-- entity
 			Set @valueFieldPrimaryKeyEntityID = 0; -- auto-generated
 			Set @valueFieldForeignKeyParentID = @schemaTypesID; -- links to types
 			SET @entityKey = CONCAT('"', @viewEntityName, '"');
 			SET @entityValue = '{}';
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
+			-- entity items
+			SET @tableEntityName = 'tbl_Schema';
+			SET @requiredFieldName = 'pk_SchemaID';
+			SET @requiredFieldValue = '';			
+			SET @whereFieldName = 'SchemaKey';
+			SET @whereOperator = '=';
+			SET @whereValue = @entityKey;		
+			-- @REQUIRED_FIELD_VALUE is what we get back from the call to get field value
+			CALL `SP_GET_FIELD_VALUE` (@tableEntityName, @requiredFieldName, @requiredFieldValue, @whereFieldName, @whereOperator, @whereValue);
+			SET @requiredFieldValue = @REQUIRED_FIELD_VALUE;
+			SET @schemaEntityID = @requiredFieldValue;
+			-- properties
+			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
+			SET @entityKey = '"properties"';
+			SET @entityValue = '{}';	
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
+			-- table name
+			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
+			SET @entityKey = '"table_name"';
+			SET @entityValue = CONCAT('"', @tableEntityNameTEMP, '"'); -- NOTE: WE NEED TO USE THE TEMP NAME HERE. And is it better to query against a view than the table... perhaps
+			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);			
+			-- keys
+			SET @valueFieldForeignKeyParentID = @schemaEntityID; -- links to entity			
+			SET @entityKey = '"keys"';
+			SET @entityValue = '{}';	
 			CALL `SP_INSERT_INTO_TABLE` (@databaseName, @entityName, @valueFieldPrimaryKeyEntityID, @valueFieldForeignKeyParentID, @entityKey, @entityValue);
 			SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
 			SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name	
