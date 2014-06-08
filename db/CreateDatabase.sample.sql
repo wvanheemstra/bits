@@ -122,7 +122,17 @@ CREATE PROCEDURE `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA` (
 		DECLARE _valueFieldPrimaryKeyEntityID INT(11) DEFAULT 0; -- auto-generated
 		DECLARE _valueFieldForeignKeyParentID INT(11) DEFAULT 0;
 		DECLARE _entityKey VARCHAR(255) DEFAULT '';
-		DECLARE _entityValue VARCHAR(255) DEFAULT '';		
+		DECLARE _entityValue VARCHAR(255) DEFAULT '';
+		DECLARE _requiredFieldName VARCHAR(255) DEFAULT '';
+		DECLARE _requiredFieldValue VARCHAR(255) DEFAULT '';
+		DECLARE _whereFieldName VARCHAR(255) DEFAULT '';
+		DECLARE _whereOperator VARCHAR(255) DEFAULT '';
+		DECLARE _whereValue VARCHAR(255) DEFAULT '';
+		DECLARE _andOrWhere VARCHAR(255) DEFAULT '';
+		DECLARE _andOrWhereFieldName VARCHAR(255) DEFAULT '';
+		DECLARE _andOrWhereOperator VARCHAR(255) DEFAULT '';
+		DECLARE _andOrWhereValue VARCHAR(255) DEFAULT '';
+				
 		-- Call stored procedure insert into table schema for type: kind of entity
 		SELECT CONCAT('Entity for Schema: ', _entityName) AS SP_ADD_KEYS_TO_TYPES_IN_SCHEMA;
 		SET _entityName = 'Schema';
@@ -130,6 +140,9 @@ CREATE PROCEDURE `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA` (
 		SET _valueFieldForeignKeyParentID = _schemaKeysID; -- links to keys
 		SET _entityKey = '"PRIMARY"';
 		SET _entityValue = '{}';
+		
+/*		
+		
 		CALL `SP_INSERT_INTO_TABLE` (
 			_databaseName, _entityName, 
 			_valueFieldPrimaryKeyEntityID, 
@@ -138,8 +151,40 @@ CREATE PROCEDURE `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA` (
 			_entityValue
 		);
 
+		-- primary key items
+		SET _tableEntityName = 'tbl_Schema';
+		SET _requiredFieldName = 'pk_SchemaID';
+		SET _requiredFieldValue = '';			
+		SET _whereFieldName = 'SchemaKey';
+		SET _whereOperator = '=';
+		SET _whereValue = @entityKey;
+		SET _andOrWhere = '';
+		SET _andOrWhereFieldName = '';
+		SET _andOrWhereOperator = '';
+		SET _andOrWhereValue = '';
+		-- @REQUIRED_FIELD_VALUE is what we get back from the call to get field value
+		CALL `SP_GET_FIELD_VALUE` (
+			_tableEntityName, 
+			_requiredFieldName, 
+			_requiredFieldValue, 
+			_whereFieldName, 
+			_whereOperator, 
+			_whereValue, 
+			_andOrWhere, 
+			_andOrWhereFieldName, 
+			_andOrWhereOperator, 
+			_andOrWhereValue
+		);
+		SET _requiredFieldValue = @REQUIRED_FIELD_VALUE;
+		SET _schemaPrimaryKeyID = _requiredFieldValue;
+		-- type primary key
+		SET _valueFieldForeignKeyParentID = _schemaPrimaryKeyID; -- links to primary key	
+		SET _entityKey = '"type"';
+		SET _entityValue = '"PRIMARY KEY"';
+		CALL `SP_INSERT_INTO_TABLE` (_databaseName, _entityName, _valueFieldPrimaryKeyEntityID, _valueFieldForeignKeyParentID, _entityKey, _entityValue);		
+		
 		-- More ...
-
+*/
 
 	END; 
 $$
