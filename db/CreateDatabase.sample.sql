@@ -130,7 +130,6 @@ CREATE PROCEDURE `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA` (
 		SET _valueFieldForeignKeyParentID = _schemaKeysID; -- links to keys
 		SET _entityKey = '"PRIMARY"';
 		SET _entityValue = '{}';
-/*		
 		CALL `SP_INSERT_INTO_TABLE` (
 			_databaseName, _entityName, 
 			_valueFieldPrimaryKeyEntityID, 
@@ -138,8 +137,8 @@ CREATE PROCEDURE `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA` (
 			_entityKey, 
 			_entityValue
 		);
-*/
-		
+
+		-- More ...
 
 
 	END; 
