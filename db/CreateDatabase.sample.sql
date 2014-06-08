@@ -100,39 +100,48 @@ DELIMITER ;
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA`;
 CREATE PROCEDURE `SP_ADD_KEYS_TO_TYPES_IN_SCHEMA` (
-		IN `DATABASE_NAME` varchar(255) CHARACTER SET 'utf8',
-		IN `ENTITY_NAME` varchar(255) CHARACTER SET 'utf8',
-		IN `ENTITY_TYPE` varchar(255) CHARACTER SET 'utf8',
-		IN `VIEW_ENTITY_NAME` varchar(255) CHARACTER SET 'utf8',
-		IN `VIEW_KIND_OF_ENTITY_NAME` varchar(255) CHARACTER SET 'utf8',
-		IN `TABLE_ENTITY_NAME` varchar(255) CHARACTER SET 'utf8',
-		IN `FIELD_PRIMARY_KEY_ENTITY_ID` varchar(255) CHARACTER SET 'utf8',
-		IN `SCHEMA_KEYS_ID` int(11)
+		IN `DATABASE_NAME` VARCHAR(255) CHARACTER SET 'utf8',
+		IN `ENTITY_NAME` VARCHAR(255) CHARACTER SET 'utf8',
+		IN `ENTITY_TYPE` VARCHAR(255) CHARACTER SET 'utf8',
+		IN `VIEW_ENTITY_NAME` VARCHAR(255) CHARACTER SET 'utf8',
+		IN `VIEW_KIND_OF_ENTITY_NAME` VARCHAR(255) CHARACTER SET 'utf8',
+		IN `TABLE_ENTITY_NAME` VARCHAR(255) CHARACTER SET 'utf8',
+		IN `FIELD_PRIMARY_KEY_ENTITY_ID` VARCHAR(255) CHARACTER SET 'utf8',
+		IN `SCHEMA_KEYS_ID` INT(11)
 	)
 	BEGIN
-		SET @databaseName = DATABASE_NAME;
-		SET @entityName = ENTITY_NAME;
-		SET @entityType = ENTITY_TYPE;
-		SET @viewEntityName = VIEW_ENTITY_NAME;
-		SET @viewKindOfEntityName = VIEW_KIND_OF_ENTITY_NAME;
-		SET @tableEntityName = TABLE_ENTITY_NAME;
-		SET @fieldPrimaryKeyEntityID = FIELD_PRIMARY_KEY_ENTITY_ID;
-		SET @schemaKeysID = SCHEMA_KEYS_ID;
+		-- local variables, prefixed with _
+		DECLARE _databaseName VARCHAR(255) DEFAULT DATABASE_NAME;
+		DECLARE _entityName VARCHAR(255) DEFAULT ENTITY_NAME;
+		DECLARE _entityType VARCHAR(255) DEFAULT ENTITY_TYPE;
+		DECLARE _viewEntityName VARCHAR(255) DEFAULT VIEW_ENTITY_NAME;
+		DECLARE _viewKindOfEntityName VARCHAR(255) DEFAULT VIEW_KIND_OF_ENTITY_NAME;
+		DECLARE _tableEntityName VARCHAR(255) DEFAULT TABLE_ENTITY_NAME;
+		DECLARE _fieldPrimaryKeyEntityID VARCHAR(255) DEFAULT FIELD_PRIMARY_KEY_ENTITY_ID;
+		DECLARE _schemaKeysID INT(11) DEFAULT SCHEMA_KEYS_ID;
+		DECLARE _valueFieldPrimaryKeyEntityID INT(11) DEFAULT 0; -- auto-generated
+		DECLARE _valueFieldForeignKeyParentID INT(11) DEFAULT 0;
+		DECLARE _entityKey VARCHAR(255) DEFAULT '';
+		DECLARE _entityValue VARCHAR(255) DEFAULT '';		
 		-- Call stored procedure insert into table schema for type: kind of entity
-		SELECT CONCAT('Entity for Schema: ', @entityName) AS SP_ADD_KEYS_TO_TYPES_IN_SCHEMA;
---		SET @entityNameTEMP = @entityName; -- safe original value for entity name
---		SET @tableEntityNameTEMP =  @tableEntityName; -- safe original value for table entity name
---		SET @fieldPrimaryKeyEntityIDTEMP = @fieldPrimaryKeyEntityID; -- safe original value for field primary key entity id
---		SET @entityName = 'Schema';
-
-
-		--  ABOVE CODE CAUSES TROUBLE AS THESE VARIABLES ARE USED ELSEWHERE ...
+		SELECT CONCAT('Entity for Schema: ', _entityName) AS SP_ADD_KEYS_TO_TYPES_IN_SCHEMA;
+		SET _entityName = 'Schema';
+		-- primary keys
+		SET _valueFieldForeignKeyParentID = _schemaKeysID; -- links to keys
+		SET _entityKey = '"PRIMARY"';
+		SET _entityValue = '{}';
+/*		
+		CALL `SP_INSERT_INTO_TABLE` (
+			_databaseName, _entityName, 
+			_valueFieldPrimaryKeyEntityID, 
+			_valueFieldForeignKeyParentID, 
+			_entityKey, 
+			_entityValue
+		);
+*/
 		
 
-		-- end
---		SET @entityName = @entityNameTEMP; -- re-assign saved original value for entity name
---		SET @tableEntityName = @tableEntityNameTEMP; -- re-assign saved original value for table entity name
---		SET @fieldPrimaryKeyEntityID = @fieldPrimaryKeyEntityIDTEMP; -- re-assign saved original value for field primary key entity id
+
 	END; 
 $$
 DELIMITER ;
